@@ -65,23 +65,22 @@ function formatDate(ts) {
 }
 
 // ─── AUTH STATE ───────────────────────────────────────────────────────────
-onAuthStateChanged(auth, async (user) => {
-  if (user) {
-    currentUser = user;
-    // Check if patient view
-    const params = new URLSearchParams(window.location.search);
-    const planId = params.get("plan");
-    if (planId) {
-      showPatientView(planId);
-      return;
+// Se for link de paciente, ignora todo o fluxo de auth
+const _patientPlanId = new URLSearchParams(window.location.search).get("plan");
+if (_patientPlanId) {
+  showPatientView(_patientPlanId);
+} else {
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      currentUser = user;
+      await loadUserData(user);
+    } else {
+      currentUser = null;
+      currentUserData = null;
+      showAuthScreen();
     }
-    await loadUserData(user);
-  } else {
-    currentUser = null;
-    currentUserData = null;
-    showAuthScreen();
-  }
-});
+  });
+}
 
 async function loadUserData(user) {
   try {
@@ -468,12 +467,60 @@ async function loadPlansPage() {
             <button class="btn btn-secondary btn-sm" onclick="copyLink('${link}')">📋 Copiar</button>
           </td>
           <td>
-            <button class="btn btn-danger btn-sm" onclick="deletePlan('${d.id}')">🗑</button>
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-secondary btn-sm" onclick="editPlan('${d.id}')">✏️</button>
+              <button class="btn btn-danger btn-sm" onclick="deletePlan('${d.id}')">🗑</button>
+            </div>
           </td>
         </tr>`;
     }).join("");
   } catch (e) { tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted">Erro ao carregar.</td></tr>`; }
 }
+
+// ─── EDIT PLAN ────────────────────────────────────────────────────────────
+window.editPlan = async (planId) => {
+  // Carregar exercícios se necessário
+  if (!allExercises.length) await loadExercisesFromDB();
+
+  const planDoc = await getDoc(doc(db, "plans", planId));
+  if (!planDoc.exists()) return;
+  const plan = planDoc.data();
+
+  // Preencher painel com dados do plano
+  el("plan-patient-name").value = plan.patientName || "";
+  selectedForPlan = allExercises.filter(ex => (plan.exerciseIds || []).includes(ex.id));
+  el("plan-count").textContent = selectedForPlan.length;
+
+  // Abrir painel e mudar botão para "Salvar Edição"
+  el("plan-panel").classList.add("open");
+  el("main").classList.add("plan-open");
+  hide("plan-link-result");
+  renderPlanPanel();
+
+  // Trocar botão de gerar para salvar
+  const btn = el("plan-panel").querySelector("button.btn-primary");
+  btn.textContent = "💾 Salvar Alterações";
+  btn.onclick = async () => {
+    const patientName = el("plan-patient-name").value.trim();
+    if (!selectedForPlan.length) { alert("Selecione ao menos um exercício."); return; }
+    if (!patientName) { alert("Informe o nome do paciente."); return; }
+    await updateDoc(doc(db, "plans", planId), {
+      patientName,
+      exerciseIds: selectedForPlan.map(ex => ex.id)
+    });
+    closePlanPanel();
+    // Restaurar botão original
+    btn.textContent = "🔗 Gerar Link para Paciente";
+    btn.onclick = () => generatePlanLink();
+    selectedForPlan = [];
+    el("plan-count").textContent = 0;
+    loadPlansPage();
+    alert("Plano atualizado com sucesso!");
+  };
+
+  // Ir para a tela de exercícios para selecionar
+  navigateTo("exercises");
+};
 
 window.copyLink = (link) => { navigator.clipboard.writeText(link); alert("Link copiado!"); };
 window.deletePlan = async (id) => {
@@ -727,9 +774,4 @@ window.togglePatientExercise = (id) => {
   arrow.textContent = isHidden ? "▲" : "▼";
 };
 
-// ─── CHECK PATIENT LINK ON LOAD ───────────────────────────────────────────
-const urlParams = new URLSearchParams(window.location.search);
-const planIdParam = urlParams.get("plan");
-if (planIdParam) {
-  showPatientView(planIdParam);
-}
+
