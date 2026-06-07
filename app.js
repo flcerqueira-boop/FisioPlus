@@ -18,7 +18,7 @@ const firebaseConfig = {
   appId: "1:137208430197:web:6be479df7f7bc7fb31023c"
 };
 
-const ADMIN_EMAIL = "flcerqueira@gmail.com";
+const ADMIN_EMAIL = "suporte@ortoflix.com";
 
 // ─── EMAILJS CONFIG ───────────────────────────────────────────────────────
 const EMAILJS_SERVICE_ID = "service_tm0udfi";
