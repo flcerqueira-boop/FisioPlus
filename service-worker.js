@@ -1,11 +1,11 @@
-const CACHE_NAME = "fisioplus-v1";
+const CACHE_NAME = "fisioplus-v2";
 const STATIC_ASSETS = [
-  "/FisioPlus/",
-  "/FisioPlus/index.html",
-  "/FisioPlus/app.js",
-  "/FisioPlus/manifest.json",
-  "/FisioPlus/icon-192.png",
-  "/FisioPlus/icon-512.png"
+  "/",
+  "/index.html",
+  "/app.js",
+  "/manifest.json",
+  "/icon-192.png",
+  "/icon-512.png"
 ];
 
 self.addEventListener("install", (event) => {
