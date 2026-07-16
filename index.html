@@ -311,8 +311,10 @@
       <div class="nav-section">Admin</div>
       <button class="nav-item" onclick="navigateTo('manage-exercises')" id="nav-manage-exercises"><span class="icon">➕</span> Gerenciar Exercícios</button>
       <button class="nav-item" onclick="navigateTo('users')" id="nav-users"><span class="icon">👥</span> Usuários</button>
+      <button class="nav-item" onclick="navigateTo('suggestions')" id="nav-suggestions"><span class="icon">💡</span> Sugestões</button>
     </div>
     <div class="nav-section" style="margin-top:auto;">Mais</div>
+    <button class="nav-item" onclick="openSuggestionModal()" id="nav-suggest"><span class="icon">💡</span> Sugerir Exercício</button>
     <button class="nav-item" onclick="navigateTo('ortoflix')" id="nav-ortoflix"><span class="icon">🎬</span> OrtoFlix</button>
   </nav>
 
@@ -358,9 +360,11 @@
 
     <!-- EXERCISES -->
     <div id="page-exercises" class="hidden">
-      <div class="flex items-center justify-between mb-4">
-        <div><div class="page-title">Exercícios</div><div class="page-subtitle">Biblioteca completa de exercícios domiciliares</div></div>
-        <button class="btn btn-primary btn-sm" onclick="openPlanPanel()" id="btn-open-plan">📋 Montar Plano (<span id="plan-count">0</span>)</button>
+      <div class="mb-4">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+          <div><div class="page-title">Exercícios</div><div class="page-subtitle" style="margin-bottom:0;">Biblioteca completa de exercícios domiciliares</div></div>
+          <button class="btn btn-primary btn-sm" onclick="openPlanPanel()" id="btn-open-plan" style="white-space:nowrap;flex-shrink:0;">📋 Plano (<span id="plan-count">0</span>)</button>
+        </div>
       </div>
       <div class="filter-bar">
         <div class="search-wrap"><span class="search-icon">🔍</span><input type="text" class="form-control" id="search-input" placeholder="Buscar exercícios..." oninput="filterExercises()" /></div>
@@ -422,6 +426,20 @@
       </div>
     </div>
 
+    <!-- SUGGESTIONS (Admin) -->
+    <div id="page-suggestions" class="hidden">
+      <div class="page-title">Sugestões de Exercícios</div>
+      <div class="page-subtitle">Enviadas pelos profissionais cadastrados</div>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Profissional</th><th>Sugestão</th><th>Detalhes</th><th>Data</th><th>Ações</th></tr></thead>
+            <tbody id="suggestions-tbody"><tr><td colspan="5" class="text-center text-muted" style="padding:32px;">Carregando...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
     <!-- ORTOFLIX -->
     <div id="page-ortoflix" class="hidden">
       <div class="ortoflix-banner">
@@ -464,6 +482,37 @@
     <div class="alert alert-success">Link gerado com sucesso!</div>
     <input type="text" id="plan-link-input" class="form-control" readonly style="font-size:12px;" />
     <button class="btn btn-secondary w-full mt-2" onclick="copyPlanLink()">📋 Copiar Link</button>
+  </div>
+</div>
+
+<!-- SUGGESTION MODAL -->
+<div id="suggestion-modal" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">💡 Sugerir Exercício</div>
+      <button class="modal-close" onclick="closeSuggestionModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="color:var(--text-muted);font-size:14px;margin-bottom:20px;">Tem um exercício que gostaria de ver no app? Envie sua sugestão para o administrador!</p>
+      <div class="form-group">
+        <label class="form-label">Nome do Exercício *</label>
+        <input type="text" id="sug-name" class="form-control" placeholder="Ex: Agachamento Sumô" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Região do Corpo</label>
+        <input type="text" id="sug-region" class="form-control" placeholder="Ex: Joelho, Quadril, Ombro..." />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Detalhes / Justificativa</label>
+        <textarea id="sug-details" class="form-control" rows="4" placeholder="Descreva o exercício ou por que seria útil no app..."></textarea>
+      </div>
+      <div id="sug-error" class="alert alert-danger hidden"></div>
+      <div id="sug-success" class="alert alert-success hidden"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeSuggestionModal()">Cancelar</button>
+      <button class="btn btn-primary" style="width:auto;" onclick="submitSuggestion()">📤 Enviar Sugestão</button>
+    </div>
   </div>
 </div>
 

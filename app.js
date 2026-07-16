@@ -208,6 +208,7 @@ window.navigateTo = (page) => {
   else if (page === "plans") loadPlansPage();
   else if (page === "manage-exercises") loadManageExercises();
   else if (page === "users") loadUsers();
+  else if (page === "suggestions") loadSuggestions();
 };
 
 // ─── DASHBOARD ───────────────────────────────────────────────────────────
@@ -720,6 +721,82 @@ window.revokeUser = async (uid) => {
   if (!confirm("Revogar acesso deste usuário?")) return;
   await updateDoc(doc(db, "users", uid), { status: "pending" });
   loadUsers();
+};
+
+// ─── SUGGESTIONS ──────────────────────────────────────────────────────────
+window.openSuggestionModal = () => {
+  el("sug-name").value = "";
+  el("sug-region").value = "";
+  el("sug-details").value = "";
+  hide("sug-error");
+  hide("sug-success");
+  show("suggestion-modal");
+};
+window.closeSuggestionModal = () => hide("suggestion-modal");
+
+window.submitSuggestion = async () => {
+  const name = el("sug-name").value.trim();
+  const region = el("sug-region").value.trim();
+  const details = el("sug-details").value.trim();
+  hide("sug-error"); hide("sug-success");
+  if (!name) {
+    el("sug-error").textContent = "Informe o nome do exercício.";
+    show("sug-error"); return;
+  }
+  try {
+    await addDoc(collection(db, "suggestions"), {
+      exerciseName: name, region, details,
+      submittedBy: currentUserData.name || currentUser.email,
+      submittedByEmail: currentUser.email,
+      status: "pending", createdAt: serverTimestamp()
+    });
+    show("sug-success");
+    el("sug-success").textContent = "Sugestão enviada com sucesso! Obrigado 🎉";
+    el("sug-name").value = ""; el("sug-region").value = ""; el("sug-details").value = "";
+    setTimeout(() => closeSuggestionModal(), 2000);
+  } catch (e) {
+    el("sug-error").textContent = "Erro ao enviar: " + e.message;
+    show("sug-error");
+  }
+};
+
+async function loadSuggestions() {
+  const tbody = el("suggestions-tbody");
+  tbody.innerHTML = `<tr><td colspan="5" class="text-center"><div class="spinner" style="margin:20px auto;"></div></td></tr>`;
+  try {
+    const snap = await getDocs(query(collection(db, "suggestions"), orderBy("createdAt", "desc")));
+    if (snap.empty) {
+      tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted" style="padding:32px;">Nenhuma sugestão recebida ainda.</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = snap.docs.map(d => {
+      const s = d.data();
+      const badge = s.status === "done"
+        ? `<span class="badge badge-approved">✅ Adicionado</span>`
+        : `<span class="badge badge-pending">⏳ Pendente</span>`;
+      return `<tr>
+        <td><strong>${s.submittedBy || "—"}</strong><br><span style="font-size:12px;color:var(--text-muted);">${s.submittedByEmail || ""}</span></td>
+        <td><strong>${s.exerciseName}</strong>${s.region ? `<br><span style="font-size:12px;color:var(--text-muted);">${s.region}</span>` : ""}</td>
+        <td style="font-size:13px;color:var(--text-muted);max-width:200px;">${s.details || "—"}</td>
+        <td>${formatDate(s.createdAt)}</td>
+        <td><div style="display:flex;gap:6px;flex-wrap:wrap;">
+          ${badge}
+          ${s.status !== "done" ? `<button class="btn btn-primary btn-sm" onclick="markSuggestionDone('${d.id}')">✅</button>` : ""}
+          <button class="btn btn-danger btn-sm" onclick="deleteSuggestion('${d.id}')">🗑</button>
+        </div></td>
+      </tr>`;
+    }).join("");
+  } catch (e) { tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted">Erro ao carregar.</td></tr>`; }
+}
+
+window.markSuggestionDone = async (id) => {
+  await updateDoc(doc(db, "suggestions", id), { status: "done" });
+  loadSuggestions();
+};
+window.deleteSuggestion = async (id) => {
+  if (!confirm("Excluir esta sugestão?")) return;
+  await deleteDoc(doc(db, "suggestions", id));
+  loadSuggestions();
 };
 
 // ─── PATIENT VIEW ─────────────────────────────────────────────────────────
