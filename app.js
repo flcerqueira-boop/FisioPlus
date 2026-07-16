@@ -31,10 +31,7 @@ async function sendApprovalEmail(userName, userEmail) {
       to_name: userName,
       email: userEmail
     }, EMAILJS_PUBLIC_KEY);
-    console.log("E-mail de aprovação enviado para", userEmail);
-  } catch (e) {
-    console.error("Erro ao enviar e-mail:", e);
-  }
+  } catch (e) { console.error("Erro ao enviar e-mail:", e); }
 }
 
 const app = initializeApp(firebaseConfig);
@@ -46,7 +43,7 @@ let currentUser = null;
 let currentUserData = null;
 let allExercises = [];
 let favorites = new Set();
-let selectedForPlan = [];
+let selectedForPlan = []; // cada item: { ...exercise, customSets, customFrequency }
 let currentPage = "dashboard";
 let editingExerciseId = null;
 let currentDetailExercise = null;
@@ -65,7 +62,6 @@ function formatDate(ts) {
 }
 
 // ─── AUTH STATE ───────────────────────────────────────────────────────────
-// Se for link de paciente, ignora todo o fluxo de auth
 const _patientPlanId = new URLSearchParams(window.location.search).get("plan");
 if (_patientPlanId) {
   showPatientView(_patientPlanId);
@@ -86,7 +82,6 @@ async function loadUserData(user) {
   try {
     const userDoc = await getDoc(doc(db, "users", user.uid));
     if (!userDoc.exists()) {
-      // Admin auto-approve
       if (user.email === ADMIN_EMAIL) {
         await setDoc(doc(db, "users", user.uid), {
           name: "Admin", email: user.email,
@@ -101,17 +96,9 @@ async function loadUserData(user) {
     } else {
       currentUserData = userDoc.data();
     }
-
-    if (currentUserData.status === "pending") {
-      showPendingScreen();
-      return;
-    }
-
+    if (currentUserData.status === "pending") { showPendingScreen(); return; }
     showApp();
-  } catch (e) {
-    console.error(e);
-    showAuthScreen();
-  }
+  } catch (e) { console.error(e); showAuthScreen(); }
 }
 
 // ─── AUTH SCREENS ─────────────────────────────────────────────────────────
@@ -126,8 +113,6 @@ function showPendingScreen() {
 function showApp() {
   hide("auth-screen"); hide("pending-screen"); hide("patient-view");
   show("app");
-
-  // Set header info
   el("header-username").textContent = currentUserData.name || currentUser.email;
   const roleEl = el("header-role-badge");
   if (currentUserData.role === "admin") {
@@ -140,7 +125,6 @@ function showApp() {
     roleEl.className = "badge badge-approved";
     hide("admin-nav");
   }
-
   navigateTo("dashboard");
   loadFavorites();
 }
@@ -214,7 +198,6 @@ window.navigateTo = (page) => {
   show(`page-${page}`);
   document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
   el(`nav-${page}`)?.classList.add("active");
-
   if (page === "dashboard") loadDashboard();
   else if (page === "exercises") loadExercisesPage();
   else if (page === "favorites") loadFavoritesPage();
@@ -248,9 +231,7 @@ async function loadExercisesFromDB() {
 async function loadFavorites() {
   try {
     const favDoc = await getDoc(doc(db, "favorites", currentUser.uid));
-    if (favDoc.exists()) {
-      favorites = new Set(favDoc.data().exerciseIds || []);
-    }
+    if (favDoc.exists()) favorites = new Set(favDoc.data().exerciseIds || []);
   } catch (e) { console.error(e); }
 }
 
@@ -319,7 +300,6 @@ function renderExerciseCard(ex) {
   const imgContent = ex.imageData
     ? `<img src="${ex.imageData}" alt="${ex.name}" />`
     : `<span>🏋️</span>`;
-
   return `
     <div class="exercise-card ${isSelected ? 'selected' : ''}" id="excard-${ex.id}">
       <div class="exercise-img" onclick="openDetailModal('${ex.id}')">${imgContent}</div>
@@ -330,9 +310,7 @@ function renderExerciseCard(ex) {
       <div class="exercise-body" onclick="openDetailModal('${ex.id}')">
         <div class="exercise-name">${ex.name}</div>
         <div class="exercise-desc">${ex.description || ""}</div>
-        <div class="tags-wrap">
-          ${(ex.tags || []).map(t => `<span class="tag">${t}</span>`).join("")}
-        </div>
+        <div class="tags-wrap">${(ex.tags || []).map(t => `<span class="tag">${t}</span>`).join("")}</div>
       </div>
       <div class="exercise-actions">
         <button class="btn btn-secondary btn-sm w-full" onclick="togglePlanSelect(event,'${ex.id}')">
@@ -361,7 +339,6 @@ window.toggleFavorite = async (e, exId) => {
   if (favorites.has(exId)) favorites.delete(exId);
   else favorites.add(exId);
   await saveFavorites();
-  // Re-render current page
   if (currentPage === "exercises") filterExercises();
   else if (currentPage === "favorites") loadFavoritesPage();
 };
@@ -373,7 +350,7 @@ window.togglePlanSelect = (e, exId) => {
   if (!ex) return;
   const idx = selectedForPlan.findIndex(x => x.id === exId);
   if (idx >= 0) selectedForPlan.splice(idx, 1);
-  else selectedForPlan.push(ex);
+  else selectedForPlan.push({ ...ex, customSets: ex.sets || "", customFrequency: ex.frequency || "" });
   el("plan-count").textContent = selectedForPlan.length;
   filterExercises();
   if (el("plan-panel").classList.contains("open")) renderPlanPanel();
@@ -398,13 +375,42 @@ function renderPlanPanel() {
     return;
   }
   list.innerHTML = selectedForPlan.map((ex, i) => `
-    <div style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--surface2);border-radius:8px;margin-bottom:8px;">
-      <div style="width:28px;height:28px;background:var(--accent-soft);color:var(--accent);border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:12px;flex-shrink:0;">${i + 1}</div>
-      <div style="flex:1;font-size:13px;font-weight:500;">${ex.name}</div>
-      <button onclick="removePlanItem('${ex.id}')" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:14px;">✕</button>
+    <div style="background:var(--surface2);border-radius:8px;margin-bottom:10px;overflow:hidden;">
+      <div style="display:flex;align-items:center;gap:10px;padding:10px;">
+        <div style="width:28px;height:28px;background:var(--accent-soft);color:var(--accent);border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:12px;flex-shrink:0;">${i + 1}</div>
+        <div style="flex:1;font-size:13px;font-weight:500;line-height:1.3;">${ex.name}</div>
+        <button onclick="removePlanItem('${ex.id}')" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:14px;flex-shrink:0;">✕</button>
+      </div>
+      <div style="padding:0 10px 10px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div>
+          <div style="font-size:10px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Séries/Rep</div>
+          <input
+            type="text"
+            value="${ex.customSets}"
+            oninput="updatePlanExField('${ex.id}','customSets',this.value)"
+            style="width:100%;padding:6px 8px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:11px;outline:none;"
+            placeholder="${ex.sets || 'Ex: 3x15'}"
+          />
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Frequência</div>
+          <input
+            type="text"
+            value="${ex.customFrequency}"
+            oninput="updatePlanExField('${ex.id}','customFrequency',this.value)"
+            style="width:100%;padding:6px 8px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:11px;outline:none;"
+            placeholder="${ex.frequency || 'Ex: 2x ao dia'}"
+          />
+        </div>
+      </div>
     </div>
   `).join("");
 }
+
+window.updatePlanExField = (exId, field, value) => {
+  const item = selectedForPlan.find(x => x.id === exId);
+  if (item) item[field] = value;
+};
 
 window.removePlanItem = (exId) => {
   selectedForPlan = selectedForPlan.filter(x => x.id !== exId);
@@ -421,6 +427,12 @@ window.generatePlanLink = async () => {
   try {
     const planRef = await addDoc(collection(db, "plans"), {
       patientName,
+      exercises: selectedForPlan.map(ex => ({
+        id: ex.id,
+        customSets: ex.customSets || ex.sets || "",
+        customFrequency: ex.customFrequency || ex.frequency || ""
+      })),
+      // manter retrocompatibilidade
       exerciseIds: selectedForPlan.map(ex => ex.id),
       createdBy: currentUser.uid,
       createdByName: currentUserData.name,
@@ -429,9 +441,7 @@ window.generatePlanLink = async () => {
     const link = `${window.location.origin}${window.location.pathname}?plan=${planRef.id}`;
     el("plan-link-input").value = link;
     show("plan-link-result");
-  } catch (e) {
-    alert("Erro ao gerar link: " + e.message);
-  }
+  } catch (e) { alert("Erro ao gerar link: " + e.message); }
 };
 
 window.copyPlanLink = () => {
@@ -457,15 +467,14 @@ async function loadPlansPage() {
     }
     tbody.innerHTML = snap.docs.map(d => {
       const p = d.data();
+      const count = (p.exercises || p.exerciseIds || []).length;
       const link = `${window.location.origin}${window.location.pathname}?plan=${d.id}`;
       return `
         <tr>
           <td><strong>${p.patientName}</strong></td>
-          <td>${(p.exerciseIds || []).length} exercício(s)</td>
+          <td>${count} exercício(s)</td>
           <td>${formatDate(p.createdAt)}</td>
-          <td>
-            <button class="btn btn-secondary btn-sm" onclick="copyLink('${link}')">📋 Copiar</button>
-          </td>
+          <td><button class="btn btn-secondary btn-sm" onclick="copyLink('${link}')">📋 Copiar</button></td>
           <td>
             <div style="display:flex;gap:8px;">
               <button class="btn btn-secondary btn-sm" onclick="editPlan('${d.id}')">✏️</button>
@@ -479,25 +488,32 @@ async function loadPlansPage() {
 
 // ─── EDIT PLAN ────────────────────────────────────────────────────────────
 window.editPlan = async (planId) => {
-  // Carregar exercícios se necessário
   if (!allExercises.length) await loadExercisesFromDB();
-
   const planDoc = await getDoc(doc(db, "plans", planId));
   if (!planDoc.exists()) return;
   const plan = planDoc.data();
 
-  // Preencher painel com dados do plano
   el("plan-patient-name").value = plan.patientName || "";
-  selectedForPlan = allExercises.filter(ex => (plan.exerciseIds || []).includes(ex.id));
-  el("plan-count").textContent = selectedForPlan.length;
 
-  // Abrir painel e mudar botão para "Salvar Edição"
+  // Suporte a formato novo (exercises[]) e antigo (exerciseIds[])
+  if (plan.exercises && plan.exercises.length) {
+    selectedForPlan = plan.exercises.map(pe => {
+      const ex = allExercises.find(x => x.id === pe.id);
+      return ex ? { ...ex, customSets: pe.customSets || ex.sets || "", customFrequency: pe.customFrequency || ex.frequency || "" } : null;
+    }).filter(Boolean);
+  } else {
+    selectedForPlan = (plan.exerciseIds || []).map(id => {
+      const ex = allExercises.find(x => x.id === id);
+      return ex ? { ...ex, customSets: ex.sets || "", customFrequency: ex.frequency || "" } : null;
+    }).filter(Boolean);
+  }
+
+  el("plan-count").textContent = selectedForPlan.length;
   el("plan-panel").classList.add("open");
   el("main").classList.add("plan-open");
   hide("plan-link-result");
   renderPlanPanel();
 
-  // Trocar botão de gerar para salvar
   const btn = el("plan-panel").querySelector("button.btn-primary");
   btn.textContent = "💾 Salvar Alterações";
   btn.onclick = async () => {
@@ -506,10 +522,14 @@ window.editPlan = async (planId) => {
     if (!patientName) { alert("Informe o nome do paciente."); return; }
     await updateDoc(doc(db, "plans", planId), {
       patientName,
+      exercises: selectedForPlan.map(ex => ({
+        id: ex.id,
+        customSets: ex.customSets || ex.sets || "",
+        customFrequency: ex.customFrequency || ex.frequency || ""
+      })),
       exerciseIds: selectedForPlan.map(ex => ex.id)
     });
     closePlanPanel();
-    // Restaurar botão original
     btn.textContent = "🔗 Gerar Link para Paciente";
     btn.onclick = () => generatePlanLink();
     selectedForPlan = [];
@@ -517,8 +537,6 @@ window.editPlan = async (planId) => {
     loadPlansPage();
     alert("Plano atualizado com sucesso!");
   };
-
-  // Ir para a tela de exercícios para selecionar
   navigateTo("exercises");
 };
 
@@ -543,8 +561,7 @@ window.openDetailModal = (exId) => {
   imgWrap.innerHTML = ex.imageData
     ? `<img src="${ex.imageData}" style="width:100%;max-height:300px;object-fit:cover;border-radius:var(--radius);" />`
     : "";
-  const tagsWrap = el("detail-tags-wrap");
-  tagsWrap.innerHTML = (ex.tags || []).map(t => `<span class="tag">${t}</span>`).join(" ");
+  el("detail-tags-wrap").innerHTML = (ex.tags || []).map(t => `<span class="tag">${t}</span>`).join(" ");
   const isSelected = selectedForPlan.find(s => s.id === exId);
   const addBtn = el("detail-add-plan-btn");
   addBtn.textContent = isSelected ? "✅ Já no Plano" : "➕ Adicionar ao Plano";
@@ -559,15 +576,14 @@ async function loadManageExercises() {
   tbody.innerHTML = `<tr><td colspan="4" class="text-center"><div class="spinner" style="margin:20px auto;"></div></td></tr>`;
   await loadExercisesFromDB();
   if (!allExercises.length) {
-    tbody.innerHTML = `<tr><td colspan="4" class="text-center text-muted" style="padding:32px;">Nenhum exercício cadastrado. Clique em "Novo Exercício".</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="4" class="text-center text-muted" style="padding:32px;">Nenhum exercício cadastrado.</td></tr>`;
     return;
   }
   tbody.innerHTML = allExercises.map(ex => `
     <tr>
-      <td>
-        ${ex.imageData
-          ? `<img src="${ex.imageData}" style="width:52px;height:52px;object-fit:cover;border-radius:8px;" />`
-          : `<div style="width:52px;height:52px;background:var(--surface2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;">🏋️</div>`}
+      <td>${ex.imageData
+        ? `<img src="${ex.imageData}" style="width:52px;height:52px;object-fit:cover;border-radius:8px;" />`
+        : `<div style="width:52px;height:52px;background:var(--surface2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;">🏋️</div>`}
       </td>
       <td><strong>${ex.name}</strong></td>
       <td><div class="tags-wrap">${(ex.tags || []).map(t => `<span class="tag">${t}</span>`).join("")}</div></td>
@@ -585,16 +601,9 @@ window.openExerciseModal = (exId = null) => {
   editingExerciseId = exId;
   el("exercise-modal-title").textContent = exId ? "Editar Exercício" : "Novo Exercício";
   el("exercise-edit-id").value = exId || "";
-  el("ex-name").value = "";
-  el("ex-desc").value = "";
-  el("ex-instructions").value = "";
-  el("ex-sets").value = "";
-  el("ex-frequency").value = "";
-  el("ex-tags").value = "";
-  el("ex-img-data").value = "";
+  ["ex-name","ex-desc","ex-instructions","ex-sets","ex-frequency","ex-tags","ex-img-data"].forEach(id => el(id).value = "");
   el("ex-img-preview").classList.add("hidden");
   el("upload-placeholder").classList.remove("hidden");
-
   if (exId) {
     const ex = allExercises.find(x => x.id === exId);
     if (ex) {
@@ -619,10 +628,7 @@ window.closeExerciseModal = () => hide("exercise-modal");
 window.previewImage = (event) => {
   const file = event.target.files[0];
   if (!file) return;
-  if (file.size > 2 * 1024 * 1024) {
-    alert("Imagem muito grande. Use imagens menores que 2MB.");
-    return;
-  }
+  if (file.size > 2 * 1024 * 1024) { alert("Imagem muito grande. Use imagens menores que 2MB."); return; }
   const reader = new FileReader();
   reader.onload = (e) => {
     const data = e.target.result;
@@ -636,18 +642,17 @@ window.previewImage = (event) => {
 
 window.saveExercise = async () => {
   const name = el("ex-name").value.trim();
-  const description = el("ex-desc").value.trim();
-  const instructions = el("ex-instructions").value.trim();
-  const sets = el("ex-sets").value.trim();
-  const frequency = el("ex-frequency").value.trim();
-  const tagsRaw = el("ex-tags").value.trim();
-  const imageData = el("ex-img-data").value;
-  const tags = tagsRaw ? tagsRaw.split(",").map(t => t.trim()).filter(Boolean) : [];
-
   if (!name) { alert("Informe o nome do exercício."); return; }
-
-  const data = { name, description, instructions, sets, frequency, tags, imageData, updatedAt: serverTimestamp() };
-
+  const data = {
+    name,
+    description: el("ex-desc").value.trim(),
+    instructions: el("ex-instructions").value.trim(),
+    sets: el("ex-sets").value.trim(),
+    frequency: el("ex-frequency").value.trim(),
+    tags: el("ex-tags").value.trim().split(",").map(t => t.trim()).filter(Boolean),
+    imageData: el("ex-img-data").value,
+    updatedAt: serverTimestamp()
+  };
   try {
     if (editingExerciseId) {
       await updateDoc(doc(db, "exercises", editingExerciseId), data);
@@ -687,14 +692,13 @@ async function loadUsers() {
       const actions = isAdmin ? "—" : u.status === "pending"
         ? `<button class="btn btn-primary btn-sm" onclick="approveUser('${d.id}')">✅ Aprovar</button>`
         : `<button class="btn btn-danger btn-sm" onclick="revokeUser('${d.id}')">🚫 Revogar</button>`;
-      return `
-        <tr>
-          <td><strong>${u.name || "—"}</strong></td>
-          <td>${u.email}</td>
-          <td>${u.crefito || "—"}</td>
-          <td>${statusBadge}</td>
-          <td>${actions}</td>
-        </tr>`;
+      return `<tr>
+        <td><strong>${u.name || "—"}</strong></td>
+        <td>${u.email}</td>
+        <td>${u.crefito || "—"}</td>
+        <td>${statusBadge}</td>
+        <td>${actions}</td>
+      </tr>`;
     }).join("");
   } catch (e) { tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted">Erro ao carregar.</td></tr>`; }
 }
@@ -728,11 +732,20 @@ async function showPatientView(planId) {
   el("patient-plan-title").textContent = `Plano de Exercícios — ${plan.patientName}`;
   el("patient-plan-subtitle").textContent = `Prescrito por ${plan.createdByName || "seu fisioterapeuta"} • ${formatDate(plan.createdAt)}`;
 
-  // Load exercises
-  const exerciseIds = plan.exerciseIds || [];
-  const exercises = await Promise.all(exerciseIds.map(async (id) => {
-    const d = await getDoc(doc(db, "exercises", id));
-    return d.exists() ? { id: d.id, ...d.data() } : null;
+  // Suporte ao formato novo (exercises[]) e antigo (exerciseIds[])
+  const planExercises = plan.exercises && plan.exercises.length
+    ? plan.exercises
+    : (plan.exerciseIds || []).map(id => ({ id, customSets: "", customFrequency: "" }));
+
+  const exercises = await Promise.all(planExercises.map(async (pe) => {
+    const d = await getDoc(doc(db, "exercises", pe.id));
+    if (!d.exists()) return null;
+    return {
+      ...d.data(),
+      id: d.id,
+      displaySets: pe.customSets || d.data().sets || "",
+      displayFrequency: pe.customFrequency || d.data().frequency || ""
+    };
   }));
 
   const container = el("patient-exercises-list");
@@ -756,10 +769,10 @@ async function showPatientView(planId) {
           <div class="section-label">Como Executar</div>
           <div class="exercise-detail-text" style="white-space:pre-line;">${ex.instructions || "—"}</div>
         </div>
-        ${ex.sets || ex.frequency ? `
+        ${ex.displaySets || ex.displayFrequency ? `
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-          ${ex.sets ? `<div><div class="section-label">Séries / Repetições</div><div class="exercise-detail-text">${ex.sets}</div></div>` : ""}
-          ${ex.frequency ? `<div><div class="section-label">Frequência</div><div class="exercise-detail-text">${ex.frequency}</div></div>` : ""}
+          ${ex.displaySets ? `<div><div class="section-label">Séries / Repetições</div><div class="exercise-detail-text">${ex.displaySets}</div></div>` : ""}
+          ${ex.displayFrequency ? `<div><div class="section-label">Frequência</div><div class="exercise-detail-text">${ex.displayFrequency}</div></div>` : ""}
         </div>` : ""}
       </div>
     </div>`).join("");
@@ -773,5 +786,3 @@ window.togglePatientExercise = (id) => {
   body.classList.toggle("hidden", !isHidden);
   arrow.textContent = isHidden ? "▲" : "▼";
 };
-
-
