@@ -196,8 +196,12 @@ window.navigateTo = (page) => {
   currentPage = page;
   document.querySelectorAll("[id^='page-']").forEach(p => p.classList.add("hidden"));
   show(`page-${page}`);
+  // Sidebar (desktop)
   document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
   el(`nav-${page}`)?.classList.add("active");
+  // Bottom nav (mobile)
+  document.querySelectorAll(".bottom-nav-item").forEach(n => n.classList.remove("active"));
+  el(`bnav-${page}`)?.classList.add("active");
   if (page === "dashboard") loadDashboard();
   else if (page === "exercises") loadExercisesPage();
   else if (page === "favorites") loadFavoritesPage();

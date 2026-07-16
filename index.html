@@ -175,7 +175,33 @@
     .divider { height: 1px; background: var(--border); margin: 20px 0; }
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
     @media (max-width: 600px) { .grid-2 { grid-template-columns: 1fr; } }
-    @media (max-width: 768px) { #sidebar { width: 100%; height: auto; position: relative; top: 0; flex-direction: row; flex-wrap: wrap; padding: 10px; } #main { margin-left: 0; padding: 16px; } }
+    /* ─── MOBILE BOTTOM NAV ─── */
+    #bottom-nav { display: none; }
+    @media (max-width: 768px) {
+      #sidebar { display: none; }
+      #bottom-nav {
+        display: flex; position: fixed; bottom: 0; left: 0; right: 0;
+        background: rgba(22,27,34,0.97); backdrop-filter: blur(12px);
+        border-top: 1px solid var(--border); z-index: 100;
+        padding: 6px 0 env(safe-area-inset-bottom, 6px);
+      }
+      .bottom-nav-item {
+        flex: 1; display: flex; flex-direction: column; align-items: center;
+        gap: 2px; padding: 6px 2px; cursor: pointer;
+        color: var(--text-muted); font-size: 10px; font-family: 'Syne', sans-serif;
+        font-weight: 600; border: none; background: none; transition: all 0.15s;
+      }
+      .bottom-nav-item .bnav-icon { font-size: 22px; line-height: 1; }
+      .bottom-nav-item.active { color: var(--accent); }
+      #main { margin-left: 0; padding: 16px; padding-bottom: 90px; }
+      #main.plan-open { margin-right: 0; }
+      .plan-panel { width: 100%; top: auto; bottom: 70px; height: 65vh; border-left: none; border-top: 1px solid var(--border); border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
+      #update-banner { bottom: 80px; }
+      .exercises-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+      #app-header { padding: 0 16px; }
+      .header-user span:first-child { display: none; }
+    }
     .hidden { display: none !important; }
     .text-center { text-align: center; }
     .text-muted { color: var(--text-muted); }
@@ -279,6 +305,25 @@
     </div>
     <div class="nav-section" style="margin-top:auto;">Mais</div>
     <button class="nav-item" onclick="navigateTo('ortoflix')" id="nav-ortoflix"><span class="icon">🎬</span> OrtoFlix</button>
+  </nav>
+
+  <!-- BOTTOM NAV MOBILE -->
+  <nav id="bottom-nav">
+    <button class="bottom-nav-item active" onclick="navigateTo('dashboard')" id="bnav-dashboard">
+      <span class="bnav-icon">🏠</span>Home
+    </button>
+    <button class="bottom-nav-item" onclick="navigateTo('exercises')" id="bnav-exercises">
+      <span class="bnav-icon">🏋️</span>Exercícios
+    </button>
+    <button class="bottom-nav-item" onclick="navigateTo('favorites')" id="bnav-favorites">
+      <span class="bnav-icon">⭐</span>Favoritos
+    </button>
+    <button class="bottom-nav-item" onclick="navigateTo('plans')" id="bnav-plans">
+      <span class="bnav-icon">📋</span>Planos
+    </button>
+    <button class="bottom-nav-item" onclick="navigateTo('ortoflix')" id="bnav-ortoflix">
+      <span class="bnav-icon">🎬</span>OrtoFlix
+    </button>
   </nav>
 
   <main id="main">
