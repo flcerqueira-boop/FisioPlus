@@ -29,20 +29,24 @@
     ::-webkit-scrollbar-track { background: var(--bg); }
     ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
-    /* ─── UPDATE BANNER ─── */
-    #update-banner {
-      display: none; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-      background: var(--accent); color: white; padding: 12px 20px;
-      border-radius: 12px; z-index: 9999; box-shadow: var(--shadow);
-      font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 600;
-      align-items: center; gap: 12px; white-space: nowrap;
+    /* ─── UPDATE MODAL ─── */
+    #update-modal {
+      display: none; position: fixed; inset: 0; z-index: 9999;
+      background: rgba(0,0,0,0.75); backdrop-filter: blur(6px);
+      align-items: center; justify-content: center; padding: 24px;
     }
-    #update-banner.show { display: flex; }
-    #update-banner button {
-      background: white; color: var(--accent); border: none;
-      padding: 6px 14px; border-radius: 8px; cursor: pointer;
-      font-family: 'Syne', sans-serif; font-weight: 700; font-size: 13px;
+    #update-modal.show { display: flex; }
+    .update-card {
+      background: var(--surface); border: 1px solid var(--accent);
+      border-radius: var(--radius-lg); padding: 32px 28px;
+      text-align: center; max-width: 340px; width: 100%;
+      box-shadow: 0 0 40px rgba(249,115,22,0.2);
     }
+    .update-icon { font-size: 48px; margin-bottom: 12px; }
+    .update-title { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 20px; margin-bottom: 8px; }
+    .update-desc { color: var(--text-muted); font-size: 14px; margin-bottom: 24px; line-height: 1.6; }
+    .update-btn { background: var(--accent); color: white; border: none; width: 100%; padding: 14px; border-radius: var(--radius); font-family: 'Syne', sans-serif; font-weight: 700; font-size: 15px; cursor: pointer; margin-bottom: 10px; }
+    .update-later { background: none; border: none; color: var(--text-muted); font-size: 13px; cursor: pointer; padding: 6px; }
 
     #app-header { position: fixed; top: 0; left: 0; right: 0; z-index: 100; background: rgba(13,17,23,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 24px; height: 60px; }
     .header-left { display: flex; align-items: center; gap: 12px; }
@@ -196,7 +200,7 @@
       #main { margin-left: 0; padding: 16px; padding-bottom: 90px; }
       #main.plan-open { margin-right: 0; }
       .plan-panel { width: 100%; top: auto; bottom: 70px; height: 65vh; border-left: none; border-top: 1px solid var(--border); border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
-      #update-banner { bottom: 80px; }
+      #update-modal { padding: 16px; }
       .exercises-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
       .stats-grid { grid-template-columns: 1fr 1fr; }
       #app-header { padding: 0 16px; }
@@ -212,10 +216,15 @@
 </head>
 <body>
 
-<!-- UPDATE BANNER -->
-<div id="update-banner">
-  🔄 Nova versão disponível!
-  <button onclick="applyUpdate()">Atualizar agora</button>
+<!-- UPDATE MODAL -->
+<div id="update-modal">
+  <div class="update-card">
+    <div class="update-icon">🔄</div>
+    <div class="update-title">Nova versão disponível!</div>
+    <div class="update-desc">Uma atualização do Fisio+ está pronta. Atualize agora para ter acesso às últimas melhorias.</div>
+    <button class="update-btn" onclick="applyUpdate()">⚡ Atualizar agora</button>
+    <button class="update-later" onclick="document.getElementById('update-modal').classList.remove('show')">Lembrar depois</button>
+  </div>
 </div>
 
 <!-- AUTH SCREEN -->
@@ -563,8 +572,8 @@
           newWorker = reg.installing;
           newWorker.addEventListener("statechange", () => {
             if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
-              // Nova versão pronta — mostra banner
-              document.getElementById("update-banner").classList.add("show");
+              // Nova versão pronta — mostra modal
+              document.getElementById("update-modal").classList.add("show");
             }
           });
         });
