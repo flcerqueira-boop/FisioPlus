@@ -118,15 +118,30 @@ function showApp() {
   if (currentUserData.role === "admin") {
     roleEl.textContent = "Admin";
     roleEl.className = "badge badge-admin";
+    // Mostrar menu admin, ocultar itens de profissional
     show("admin-nav");
+    show("admin-quick");
+    hide("nav-favorites");
+    hide("nav-plans");
+    hide("nav-ortoflix");
     el("stat-users-card").style.display = "flex";
+    hide("stat-favorites-card");
+    hide("stat-plans-card");
+    el("dashboard-pro-actions").style.display = "none";
+    // Bottom nav admin
+    el("bottom-nav-admin")?.classList.add("visible");
+    el("bottom-nav-pro")?.classList.remove("visible");
   } else {
     roleEl.textContent = "Profissional";
     roleEl.className = "badge badge-approved";
     hide("admin-nav");
+    hide("admin-quick");
+    // Bottom nav profissional
+    el("bottom-nav-pro")?.classList.add("visible");
+    el("bottom-nav-admin")?.classList.remove("visible");
+    loadFavorites();
   }
   navigateTo("dashboard");
-  loadFavorites();
 }
 
 // ─── AUTH TABS ────────────────────────────────────────────────────────────
@@ -202,6 +217,15 @@ window.navigateTo = (page) => {
   // Bottom nav (mobile)
   document.querySelectorAll(".bottom-nav-item").forEach(n => n.classList.remove("active"));
   el(`bnav-${page}`)?.classList.add("active");
+  // Admin bottom nav
+  el(`bnav-admin-dashboard`)?.classList.remove("active");
+  el(`bnav-admin-manage`)?.classList.remove("active");
+  el(`bnav-admin-users`)?.classList.remove("active");
+  el(`bnav-admin-suggestions`)?.classList.remove("active");
+  if (page === "dashboard") el("bnav-admin-dashboard")?.classList.add("active");
+  else if (page === "manage-exercises") el("bnav-admin-manage")?.classList.add("active");
+  else if (page === "users") el("bnav-admin-users")?.classList.add("active");
+  else if (page === "suggestions") el("bnav-admin-suggestions")?.classList.add("active");
   if (page === "dashboard") loadDashboard();
   else if (page === "exercises") loadExercisesPage();
   else if (page === "favorites") loadFavoritesPage();
@@ -216,12 +240,16 @@ async function loadDashboard() {
   try {
     const exSnap = await getDocs(collection(db, "exercises"));
     el("stat-exercises").textContent = exSnap.size;
-    const planSnap = await getDocs(query(collection(db, "plans"), where("createdBy", "==", currentUser.uid)));
-    el("stat-plans").textContent = planSnap.size;
-    el("stat-favorites").textContent = favorites.size;
     if (currentUserData.role === "admin") {
       const usersSnap = await getDocs(query(collection(db, "users"), where("status", "==", "approved")));
       el("stat-users").textContent = usersSnap.size;
+      const sugSnap = await getDocs(query(collection(db, "suggestions"), where("status", "==", "pending")));
+      el("stat-suggestions").textContent = sugSnap.size;
+      el("stat-suggestions-card").style.display = "flex";
+    } else {
+      const planSnap = await getDocs(query(collection(db, "plans"), where("createdBy", "==", currentUser.uid)));
+      el("stat-plans").textContent = planSnap.size;
+      el("stat-favorites").textContent = favorites.size;
     }
   } catch (e) { console.error(e); }
 }

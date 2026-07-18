@@ -180,15 +180,16 @@
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
     @media (max-width: 600px) { .grid-2 { grid-template-columns: 1fr; } }
     /* ─── MOBILE BOTTOM NAV ─── */
-    #bottom-nav { display: none; }
+    #bottom-nav-pro, #bottom-nav-admin { display: none; }
     @media (max-width: 768px) {
       #sidebar { display: none; }
-      #bottom-nav {
-        display: flex; position: fixed; bottom: 0; left: 0; right: 0;
+      #bottom-nav-pro, #bottom-nav-admin {
+        position: fixed; bottom: 0; left: 0; right: 0;
         background: rgba(22,27,34,0.97); backdrop-filter: blur(12px);
         border-top: 1px solid var(--border); z-index: 100;
         padding: 6px 0 env(safe-area-inset-bottom, 6px);
       }
+      #bottom-nav-pro.visible, #bottom-nav-admin.visible { display: flex; }
       .bottom-nav-item {
         flex: 1; display: flex; flex-direction: column; align-items: center;
         gap: 2px; padding: 6px 2px; cursor: pointer;
@@ -318,8 +319,8 @@
     <button class="nav-item" onclick="navigateTo('ortoflix')" id="nav-ortoflix"><span class="icon">🎬</span> OrtoFlix</button>
   </nav>
 
-  <!-- BOTTOM NAV MOBILE -->
-  <nav id="bottom-nav">
+  <!-- BOTTOM NAV MOBILE — Profissional -->
+  <nav id="bottom-nav-pro">
     <button class="bottom-nav-item active" onclick="navigateTo('dashboard')" id="bnav-dashboard">
       <span class="bnav-icon">🏠</span>Home
     </button>
@@ -337,6 +338,22 @@
     </button>
   </nav>
 
+  <!-- BOTTOM NAV MOBILE — Admin -->
+  <nav id="bottom-nav-admin" class="hidden">
+    <button class="bottom-nav-item active" onclick="navigateTo('dashboard')" id="bnav-admin-dashboard">
+      <span class="bnav-icon">🏠</span>Home
+    </button>
+    <button class="bottom-nav-item" onclick="navigateTo('manage-exercises')" id="bnav-admin-manage">
+      <span class="bnav-icon">➕</span>Exercícios
+    </button>
+    <button class="bottom-nav-item" onclick="navigateTo('users')" id="bnav-admin-users">
+      <span class="bnav-icon">⏳</span>Pendentes
+    </button>
+    <button class="bottom-nav-item" onclick="navigateTo('suggestions')" id="bnav-admin-suggestions">
+      <span class="bnav-icon">💡</span>Sugestões
+    </button>
+  </nav>
+
   <main id="main">
     <!-- DASHBOARD -->
     <div id="page-dashboard">
@@ -344,16 +361,24 @@
       <div class="page-subtitle">Visão geral do Fisio+</div>
       <div class="stats-grid">
         <div class="stat-card"><div class="stat-icon orange">🏋️</div><div><div class="stat-value" id="stat-exercises">—</div><div class="stat-label">Exercícios cadastrados</div></div></div>
-        <div class="stat-card"><div class="stat-icon blue">📋</div><div><div class="stat-value" id="stat-plans">—</div><div class="stat-label">Planos criados</div></div></div>
-        <div class="stat-card"><div class="stat-icon green">⭐</div><div><div class="stat-value" id="stat-favorites">—</div><div class="stat-label">Favoritos</div></div></div>
+        <div class="stat-card" id="stat-plans-card"><div class="stat-icon blue">📋</div><div><div class="stat-value" id="stat-plans">—</div><div class="stat-label">Planos criados</div></div></div>
+        <div class="stat-card" id="stat-favorites-card"><div class="stat-icon green">⭐</div><div><div class="stat-value" id="stat-favorites">—</div><div class="stat-label">Favoritos</div></div></div>
         <div class="stat-card" id="stat-users-card" style="display:none"><div class="stat-icon purple">👥</div><div><div class="stat-value" id="stat-users">—</div><div class="stat-label">Profissionais ativos</div></div></div>
+        <div class="stat-card" id="stat-suggestions-card" style="display:none"><div class="stat-icon orange">💡</div><div><div class="stat-value" id="stat-suggestions">—</div><div class="stat-label">Sugestões pendentes</div></div></div>
       </div>
       <div class="card">
         <div class="card-header"><div class="card-title">🚀 Início Rápido</div></div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;">
+        <div id="dashboard-pro-actions" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;">
           <button class="btn btn-secondary" onclick="navigateTo('exercises')" style="justify-content:flex-start;">🏋️ Ver Exercícios</button>
           <button class="btn btn-secondary" onclick="navigateTo('plans')" style="justify-content:flex-start;">📋 Criar Plano</button>
           <button class="btn btn-secondary" onclick="navigateTo('favorites')" style="justify-content:flex-start;">⭐ Meus Favoritos</button>
+        </div>
+        <div id="admin-quick" class="hidden">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;">
+            <button class="btn btn-secondary" onclick="navigateTo('manage-exercises')" style="justify-content:flex-start;">➕ Gerenciar Exercícios</button>
+            <button class="btn btn-secondary" onclick="navigateTo('users')" style="justify-content:flex-start;">👥 Usuários</button>
+            <button class="btn btn-secondary" onclick="navigateTo('suggestions')" style="justify-content:flex-start;">💡 Sugestões</button>
+          </div>
         </div>
       </div>
     </div>
