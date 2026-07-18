@@ -188,8 +188,10 @@
         background: rgba(22,27,34,0.97); backdrop-filter: blur(12px);
         border-top: 1px solid var(--border); z-index: 100;
         padding: 6px 0 env(safe-area-inset-bottom, 6px);
+        display: none;
       }
-      #bottom-nav-pro.visible, #bottom-nav-admin.visible { display: flex; }
+      #bottom-nav-pro.visible { display: flex !important; }
+      #bottom-nav-admin.visible { display: flex !important; }
       .bottom-nav-item {
         flex: 1; display: flex; flex-direction: column; align-items: center;
         gap: 2px; padding: 6px 2px; cursor: pointer;
