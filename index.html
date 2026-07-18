@@ -363,7 +363,10 @@
       <div class="mb-4">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;">
           <div><div class="page-title">Exercícios</div><div class="page-subtitle" style="margin-bottom:0;">Biblioteca completa de exercícios domiciliares</div></div>
-          <button class="btn btn-primary btn-sm" onclick="openPlanPanel()" id="btn-open-plan" style="white-space:nowrap;flex-shrink:0;">📋 Plano (<span id="plan-count">0</span>)</button>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0;">
+            <button class="btn btn-primary btn-sm" onclick="openPlanPanel()" id="btn-open-plan" style="white-space:nowrap;">📋 Plano (<span id="plan-count">0</span>)</button>
+            <button onclick="openSuggestionModal()" style="background:none;border:none;color:var(--text-muted);font-size:11px;cursor:pointer;text-decoration:underline;padding:0;">💡 Sugerir exercício</button>
+          </div>
         </div>
       </div>
       <div class="filter-bar">
