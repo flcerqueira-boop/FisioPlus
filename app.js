@@ -268,10 +268,12 @@ async function sendPushNotification(title, message) {
   try {
     await fetch("https://ntfy.sh/fisioplus-ortoflix", {
       method: "POST",
+      mode: "no-cors",
       headers: {
         "Title": title,
         "Priority": "high",
-        "Tags": "fisio,novo_cadastro"
+        "Tags": "fisio,novo_cadastro",
+        "Content-Type": "text/plain"
       },
       body: message
     });
