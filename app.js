@@ -22,7 +22,7 @@ const ADMIN_EMAIL = "suporte@ortoflix.com";
 
 // ─── EMAILJS CONFIG ───────────────────────────────────────────────────────
 const EMAILJS_SERVICE_ID = "service_tm0udfi";
-const EMAILJS_TEMPLATE_ID = "template_hxr1raj";
+const EMAILJS_TEMPLATE_ID = "template_ilgu5zq";
 const EMAILJS_PUBLIC_KEY = "Vr9itk38fpBYXI3E4";
 
 async function sendApprovalEmail(userName, userEmail) {
