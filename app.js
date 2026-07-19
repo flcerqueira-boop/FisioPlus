@@ -194,6 +194,11 @@ window.doRegister = async () => {
     });
     show("register-success");
     el("register-success").textContent = "Cadastro enviado! Aguarde aprovação do administrador.";
+    // Notificar admin via Ntfy
+    await sendPushNotification(
+      "🏥 Novo cadastro no Fisio+",
+      `${name} (${crefito || "sem CREFITO"}) solicitou acesso ao Fisio+. Acesse o app para aprovar.`
+    );
   } catch (e) {
     const msgs = {
       "auth/email-already-in-use": "Este e-mail já está cadastrado.",
@@ -256,6 +261,21 @@ async function loadDashboard() {
       el("stat-favorites").textContent = favorites.size;
     }
   } catch (e) { console.error(e); }
+}
+
+// ─── NTFY PUSH NOTIFICATION ──────────────────────────────────────────────
+async function sendPushNotification(title, message) {
+  try {
+    await fetch("https://ntfy.sh/fisioplus-ortoflix", {
+      method: "POST",
+      headers: {
+        "Title": title,
+        "Priority": "high",
+        "Tags": "fisio,novo_cadastro"
+      },
+      body: message
+    });
+  } catch (e) { console.error("Erro ao enviar notificação:", e); }
 }
 
 // ─── BADGE / NOTIFICAÇÕES ────────────────────────────────────────────────
