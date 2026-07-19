@@ -117,9 +117,7 @@ function showPendingScreen(rejected = false) {
   } else {
     el("pending-icon").textContent = "⏳";
     el("pending-title").textContent = "Cadastro em Análise";
-    el("pending-text").textContent = "Sua solicitação foi recebida! O administrador irá revisar e aprovar seu acesso em breve.
-
-Você receberá uma notificação quando seu cadastro for liberado.";
+    el("pending-text").textContent = "Sua solicitação foi recebida! O administrador irá revisar e aprovar seu acesso em breve. Você receberá uma notificação quando seu cadastro for liberado.";
   }
 }
 function showApp() {
