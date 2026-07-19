@@ -315,11 +315,11 @@
   <header id="app-header">
     <div class="header-left">
       <div class="auth-app-name" style="font-size:20px;">Fisio<span style="color:var(--accent)">+</span></div>
-      <span class="badge-beta">BETA</span>
+      <span style="color:var(--text-muted);font-size:12px;font-family:'DM Sans',sans-serif;">by OrtoFlix</span>
     </div>
     <div class="header-user">
-      <span>Olá, <strong id="header-username">—</strong></span>
-      <span id="header-role-badge" class="badge"></span>
+      <span id="header-role-badge" class="badge hidden"></span>
+      <span class="badge-beta">BETA</span>
       <button class="btn-logout" onclick="doLogout()">Sair</button>
     </div>
   </header>
@@ -394,7 +394,7 @@
       </div>
       <div class="card">
         <div class="card-header"><div class="card-title">🚀 Início Rápido</div></div>
-        <div id="dashboard-pro-actions" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;">
+        <div id="dashboard-pro-actions" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;">
           <button class="btn btn-secondary" onclick="navigateTo('exercises')" style="justify-content:flex-start;">🏋️ Ver Exercícios</button>
           <button class="btn btn-secondary" onclick="navigateTo('plans')" style="justify-content:flex-start;">📋 Criar Plano</button>
           <button class="btn btn-secondary" onclick="navigateTo('favorites')" style="justify-content:flex-start;">⭐ Meus Favoritos</button>

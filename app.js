@@ -113,12 +113,13 @@ function showPendingScreen() {
 function showApp() {
   hide("auth-screen"); hide("pending-screen"); hide("patient-view");
   show("app");
-  el("header-username").textContent = currentUserData.name || currentUser.email;
   const roleEl = el("header-role-badge");
   if (currentUserData.role === "admin") {
+    // Badge Admin visível só para admin
     roleEl.textContent = "Admin";
     roleEl.className = "badge badge-admin";
-    // Mostrar menu admin, ocultar itens de profissional
+    roleEl.classList.remove("hidden");
+    // Menu admin
     show("admin-nav");
     show("admin-quick");
     hide("nav-favorites");
@@ -132,13 +133,13 @@ function showApp() {
     el("bottom-nav-admin")?.classList.add("visible");
     el("bottom-nav-pro")?.classList.remove("visible");
     checkPendingBadge();
-    // Verificar pendentes e atualizar badges
-    checkPendingBadge();
   } else {
-    roleEl.textContent = "Profissional";
-    roleEl.className = "badge badge-approved";
+    // Profissional — sem badge de perfil
+    roleEl.classList.add("hidden");
     hide("admin-nav");
     hide("admin-quick");
+    // Início Rápido visível
+    el("dashboard-pro-actions").style.display = "grid";
     // Bottom nav profissional
     el("bottom-nav-pro")?.classList.add("visible");
     el("bottom-nav-admin")?.classList.remove("visible");
