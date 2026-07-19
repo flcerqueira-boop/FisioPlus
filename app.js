@@ -96,7 +96,8 @@ async function loadUserData(user) {
     } else {
       currentUserData = userDoc.data();
     }
-    if (currentUserData.status === "pending") { showPendingScreen(); return; }
+    if (currentUserData.status === "pending") { showPendingScreen(false); return; }
+    if (currentUserData.status === "rejected") { showPendingScreen(true); return; }
     showApp();
   } catch (e) { console.error(e); showAuthScreen(); }
 }
@@ -106,9 +107,20 @@ function showAuthScreen() {
   hide("app"); hide("pending-screen"); hide("patient-view");
   show("auth-screen");
 }
-function showPendingScreen() {
+function showPendingScreen(rejected = false) {
   hide("app"); hide("auth-screen"); hide("patient-view");
   show("pending-screen");
+  if (rejected) {
+    el("pending-icon").textContent = "❌";
+    el("pending-title").textContent = "Cadastro Não Aprovado";
+    el("pending-text").textContent = "Infelizmente seu cadastro não foi aprovado. Entre em contato com o administrador para mais informações.";
+  } else {
+    el("pending-icon").textContent = "⏳";
+    el("pending-title").textContent = "Cadastro em Análise";
+    el("pending-text").textContent = "Sua solicitação foi recebida! O administrador irá revisar e aprovar seu acesso em breve.
+
+Você receberá uma notificação quando seu cadastro for liberado.";
+  }
 }
 function showApp() {
   hide("auth-screen"); hide("pending-screen"); hide("patient-view");
@@ -266,17 +278,13 @@ async function loadDashboard() {
 // ─── NTFY PUSH NOTIFICATION ──────────────────────────────────────────────
 async function sendPushNotification(title, message) {
   try {
-    await fetch("https://ntfy.sh/fisioplus-ortoflix", {
-      method: "POST",
-      mode: "no-cors",
-      headers: {
-        "Title": title,
-        "Priority": "high",
-        "Tags": "fisio,novo_cadastro",
-        "Content-Type": "text/plain"
-      },
-      body: message
-    });
+    // Usar XMLHttpRequest para evitar bloqueio de CORS
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", "https://ntfy.sh/fisioplus-ortoflix", true);
+    xhr.setRequestHeader("Title", title);
+    xhr.setRequestHeader("Priority", "high");
+    xhr.setRequestHeader("Tags", "white_check_mark");
+    xhr.send(message);
   } catch (e) { console.error("Erro ao enviar notificação:", e); }
 }
 
@@ -798,13 +806,17 @@ async function loadUsers() {
         ? `<span class="badge badge-admin">Admin</span>`
         : u.status === "approved"
           ? `<span class="badge badge-approved">✅ Ativo</span>`
-          : `<span class="badge badge-pending">⏳ Pendente</span>`;
+          : u.status === "rejected"
+            ? `<span class="badge" style="background:rgba(248,81,73,0.15);color:#f85149;">❌ Rejeitado</span>`
+            : `<span class="badge badge-pending">⏳ Pendente</span>`;
       const actions = isAdmin ? "—" : u.status === "pending"
         ? `<div style="display:flex;gap:6px;">
             <button class="btn btn-primary btn-sm" onclick="approveUser('${d.id}')">✅ Aprovar</button>
             <button class="btn btn-danger btn-sm" onclick="rejectUser('${d.id}', '${u.email}')">❌ Rejeitar</button>
            </div>`
-        : `<button class="btn btn-danger btn-sm" onclick="revokeUser('${d.id}')">🚫 Revogar</button>`;
+        : u.status === "rejected"
+          ? `<button class="btn btn-secondary btn-sm" onclick="approveUser('${d.id}')">✅ Aprovar assim mesmo</button>`
+          : `<button class="btn btn-danger btn-sm" onclick="revokeUser('${d.id}')">🚫 Revogar</button>`;
       return `<tr>
         <td><strong>${u.name || "—"}</strong></td>
         <td>${u.email}</td>
@@ -827,8 +839,8 @@ window.approveUser = async (uid) => {
   loadUsers();
 };
 window.rejectUser = async (uid, email) => {
-  if (!confirm(`Rejeitar e excluir o cadastro de ${email}?`)) return;
-  await deleteDoc(doc(db, "users", uid));
+  if (!confirm(`Rejeitar o cadastro de ${email}?`)) return;
+  await updateDoc(doc(db, "users", uid), { status: "rejected" });
   checkPendingBadge();
   loadUsers();
 };
