@@ -272,13 +272,23 @@ async function checkPendingBadge() {
     const badgeNav = el("badge-pending");
     if (badgeNav) {
       badgeNav.textContent = count;
-      badgeNav.style.display = count > 0 ? "flex" : "none";
+      if (count > 0) {
+        badgeNav.classList.remove("hidden");
+        badgeNav.style.display = "flex";
+      } else {
+        badgeNav.classList.add("hidden");
+      }
     }
     // Badge dashboard
     const badgeDash = el("badge-pending-dash");
     if (badgeDash) {
       badgeDash.textContent = count;
-      badgeDash.style.display = count > 0 ? "inline-flex" : "none";
+      if (count > 0) {
+        badgeDash.classList.remove("hidden");
+        badgeDash.style.display = "inline-flex";
+      } else {
+        badgeDash.classList.add("hidden");
+      }
     }
   } catch (e) { console.error(e); }
 }
