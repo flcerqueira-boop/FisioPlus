@@ -278,13 +278,11 @@ async function loadDashboard() {
 // ─── NTFY PUSH NOTIFICATION ──────────────────────────────────────────────
 async function sendPushNotification(title, message) {
   try {
-    // Usar XMLHttpRequest para evitar bloqueio de CORS
-    const xhr = new XMLHttpRequest();
-    xhr.open("POST", "https://ntfy.sh/fisioplus-ortoflix", true);
-    xhr.setRequestHeader("Title", title);
-    xhr.setRequestHeader("Priority", "high");
-    xhr.setRequestHeader("Tags", "white_check_mark");
-    xhr.send(message);
+    const fullMessage = `${title}: ${message}`;
+    const encoded = encodeURIComponent(fullMessage);
+    // Usar beacon API — não tem bloqueio de CORS
+    const blob = new Blob([fullMessage], { type: "text/plain" });
+    navigator.sendBeacon(`https://ntfy.sh/fisioplus-ortoflix`, blob);
   } catch (e) { console.error("Erro ao enviar notificação:", e); }
 }
 
