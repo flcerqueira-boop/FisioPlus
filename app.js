@@ -280,7 +280,7 @@ async function checkPendingBadge() {
         badgeNav.classList.add("hidden");
       }
     }
-    // Badge dashboard
+    // Badge dashboard usuários
     const badgeDash = el("badge-pending-dash");
     if (badgeDash) {
       badgeDash.textContent = count;
@@ -289,6 +289,21 @@ async function checkPendingBadge() {
         badgeDash.style.display = "inline-flex";
       } else {
         badgeDash.classList.add("hidden");
+      }
+    }
+
+    // Badge sugestões pendentes
+    const sugSnap = await getDocs(query(collection(db, "suggestions"), where("status", "==", "pending")));
+    const sugCount = sugSnap.size;
+    el("stat-suggestions").textContent = sugCount;
+    const badgeSug = el("badge-suggestions-icon");
+    if (badgeSug) {
+      badgeSug.textContent = sugCount;
+      if (sugCount > 0) {
+        badgeSug.classList.remove("hidden");
+        badgeSug.style.display = "flex";
+      } else {
+        badgeSug.classList.add("hidden");
       }
     }
   } catch (e) { console.error(e); }
@@ -763,7 +778,10 @@ async function loadUsers() {
           ? `<span class="badge badge-approved">✅ Ativo</span>`
           : `<span class="badge badge-pending">⏳ Pendente</span>`;
       const actions = isAdmin ? "—" : u.status === "pending"
-        ? `<button class="btn btn-primary btn-sm" onclick="approveUser('${d.id}')">✅ Aprovar</button>`
+        ? `<div style="display:flex;gap:6px;">
+            <button class="btn btn-primary btn-sm" onclick="approveUser('${d.id}')">✅ Aprovar</button>
+            <button class="btn btn-danger btn-sm" onclick="rejectUser('${d.id}', '${u.email}')">❌ Rejeitar</button>
+           </div>`
         : `<button class="btn btn-danger btn-sm" onclick="revokeUser('${d.id}')">🚫 Revogar</button>`;
       return `<tr>
         <td><strong>${u.name || "—"}</strong></td>
@@ -786,6 +804,13 @@ window.approveUser = async (uid) => {
   checkPendingBadge();
   loadUsers();
 };
+window.rejectUser = async (uid, email) => {
+  if (!confirm(`Rejeitar e excluir o cadastro de ${email}?`)) return;
+  await deleteDoc(doc(db, "users", uid));
+  checkPendingBadge();
+  loadUsers();
+};
+
 window.revokeUser = async (uid) => {
   if (!confirm("Revogar acesso deste usuário?")) return;
   await updateDoc(doc(db, "users", uid), { status: "pending" });

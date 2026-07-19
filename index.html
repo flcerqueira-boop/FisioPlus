@@ -390,7 +390,13 @@
         <div class="stat-card" id="stat-plans-card"><div class="stat-icon blue">📋</div><div><div class="stat-value" id="stat-plans">—</div><div class="stat-label">Planos criados</div></div></div>
         <div class="stat-card" id="stat-favorites-card"><div class="stat-icon green">⭐</div><div><div class="stat-value" id="stat-favorites">—</div><div class="stat-label">Favoritos</div></div></div>
         <div class="stat-card" id="stat-users-card" style="display:none"><div class="stat-icon purple">👥</div><div><div class="stat-value" id="stat-users">—</div><div class="stat-label">Profissionais ativos</div></div></div>
-        <div class="stat-card" id="stat-suggestions-card" style="display:none"><div class="stat-icon orange">💡</div><div><div class="stat-value" id="stat-suggestions">—</div><div class="stat-label">Sugestões pendentes</div></div></div>
+        <div class="stat-card" id="stat-suggestions-card" style="display:none;cursor:pointer;" onclick="navigateTo('suggestions')">
+          <div class="stat-icon orange" style="position:relative;">
+            💡
+            <span id="badge-suggestions-icon" class="hidden" style="position:absolute;top:-6px;right:-6px;background:#f85149;color:white;font-size:9px;font-weight:700;min-width:16px;height:16px;border-radius:8px;display:flex;align-items:center;justify-content:center;padding:0 3px;font-family:'Syne',sans-serif;"></span>
+          </div>
+          <div><div class="stat-value" id="stat-suggestions">—</div><div class="stat-label">Sugestões pendentes</div></div>
+        </div>
       </div>
       <div class="card">
         <div class="card-header"><div class="card-title">🚀 Início Rápido</div></div>
