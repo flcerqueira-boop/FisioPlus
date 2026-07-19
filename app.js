@@ -131,6 +131,9 @@ function showApp() {
     // Bottom nav admin
     el("bottom-nav-admin")?.classList.add("visible");
     el("bottom-nav-pro")?.classList.remove("visible");
+    checkPendingBadge();
+    // Verificar pendentes e atualizar badges
+    checkPendingBadge();
   } else {
     roleEl.textContent = "Profissional";
     roleEl.className = "badge badge-approved";
@@ -250,6 +253,32 @@ async function loadDashboard() {
       const planSnap = await getDocs(query(collection(db, "plans"), where("createdBy", "==", currentUser.uid)));
       el("stat-plans").textContent = planSnap.size;
       el("stat-favorites").textContent = favorites.size;
+    }
+  } catch (e) { console.error(e); }
+}
+
+// ─── BADGE / NOTIFICAÇÕES ────────────────────────────────────────────────
+async function checkPendingBadge() {
+  if (currentUserData.role !== "admin") return;
+  try {
+    const snap = await getDocs(query(collection(db, "users"), where("status", "==", "pending")));
+    const count = snap.size;
+    // Badge no ícone do PWA
+    if ("setAppBadge" in navigator) {
+      if (count > 0) navigator.setAppBadge(count);
+      else navigator.clearAppBadge();
+    }
+    // Badge bottom nav
+    const badgeNav = el("badge-pending");
+    if (badgeNav) {
+      badgeNav.textContent = count;
+      badgeNav.style.display = count > 0 ? "flex" : "none";
+    }
+    // Badge dashboard
+    const badgeDash = el("badge-pending-dash");
+    if (badgeDash) {
+      badgeDash.textContent = count;
+      badgeDash.style.display = count > 0 ? "inline-flex" : "none";
     }
   } catch (e) { console.error(e); }
 }
@@ -743,6 +772,7 @@ window.approveUser = async (uid) => {
     const u = userDoc.data();
     await sendApprovalEmail(u.name || "Profissional", u.email);
   }
+  checkPendingBadge();
   loadUsers();
 };
 window.revokeUser = async (uid) => {

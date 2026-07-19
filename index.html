@@ -369,7 +369,11 @@
       <span class="bnav-icon">➕</span>Exercícios
     </button>
     <button class="bottom-nav-item" onclick="navigateTo('users')" id="bnav-admin-users">
-      <span class="bnav-icon">⏳</span>Pendentes
+      <span style="position:relative;display:inline-block;">
+        <span class="bnav-icon">⏳</span>
+        <span id="badge-pending" class="hidden" style="position:absolute;top:-4px;right:-8px;background:#f85149;color:white;font-size:9px;font-weight:700;min-width:16px;height:16px;border-radius:8px;display:flex;align-items:center;justify-content:center;padding:0 3px;font-family:'Syne',sans-serif;"></span>
+      </span>
+      Pendentes
     </button>
     <button class="bottom-nav-item" onclick="navigateTo('suggestions')" id="bnav-admin-suggestions">
       <span class="bnav-icon">💡</span>Sugestões
@@ -398,7 +402,10 @@
         <div id="admin-quick" class="hidden">
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;">
             <button class="btn btn-secondary" onclick="navigateTo('manage-exercises')" style="justify-content:flex-start;">➕ Gerenciar Exercícios</button>
-            <button class="btn btn-secondary" onclick="navigateTo('users')" style="justify-content:flex-start;">👥 Usuários</button>
+            <button class="btn btn-secondary" onclick="navigateTo('users')" style="justify-content:flex-start;position:relative;">
+              👥 Usuários
+              <span id="badge-pending-dash" class="hidden" style="background:#f85149;color:white;font-size:10px;font-weight:700;min-width:18px;height:18px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;padding:0 4px;margin-left:6px;font-family:'Syne',sans-serif;"></span>
+            </button>
             <button class="btn btn-secondary" onclick="navigateTo('suggestions')" style="justify-content:flex-start;">💡 Sugestões</button>
           </div>
         </div>
