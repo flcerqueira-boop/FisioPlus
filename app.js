@@ -972,7 +972,7 @@ async function showPatientView(planId) {
         <span id="pex-arrow-${i}" style="color:var(--text-muted);font-size:18px;">▼</span>
       </div>
       <div id="pex-${i}" class="patient-exercise-body hidden">
-        ${ex.imageData ? `<img src="${ex.imageData}" class="patient-exercise-img" style="display:block;" />` : ""}
+        ${ex.imageData ? `<img src="${ex.imageData}" style="display:block;width:100%;max-height:260px;object-fit:cover;border-radius:10px;margin:16px 0;" />` : ""}
         <div class="mb-4">
           <div class="section-label">Descrição</div>
           <div class="exercise-detail-text">${ex.description || "—"}</div>
