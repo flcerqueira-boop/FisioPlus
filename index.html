@@ -386,9 +386,11 @@
       <div class="page-title">Dashboard</div>
       <div class="page-subtitle">Visão geral do Fisio+</div>
       <div class="stats-grid">
-        <div class="stat-card"><div class="stat-icon orange">🏋️</div><div><div class="stat-value" id="stat-exercises">—</div><div class="stat-label">Exercícios cadastrados</div></div></div>
+        <!-- Cards Profissional -->
+        <div class="stat-card" id="stat-exercises-card"><div class="stat-icon orange">🏋️</div><div><div class="stat-value" id="stat-exercises">—</div><div class="stat-label">Exercícios cadastrados</div></div></div>
         <div class="stat-card" id="stat-plans-card"><div class="stat-icon blue">📋</div><div><div class="stat-value" id="stat-plans">—</div><div class="stat-label">Planos criados</div></div></div>
         <div class="stat-card" id="stat-favorites-card"><div class="stat-icon green">⭐</div><div><div class="stat-value" id="stat-favorites">—</div><div class="stat-label">Favoritos</div></div></div>
+        <!-- Cards Admin -->
         <div class="stat-card" id="stat-users-card" style="display:none"><div class="stat-icon purple">👥</div><div><div class="stat-value" id="stat-users">—</div><div class="stat-label">Profissionais ativos</div></div></div>
         <div class="stat-card" id="stat-suggestions-card" style="display:none;cursor:pointer;" onclick="navigateTo('suggestions')">
           <div class="stat-icon orange" style="position:relative;">
@@ -404,6 +406,7 @@
           <button class="btn btn-secondary" onclick="navigateTo('exercises')" style="justify-content:flex-start;">🏋️ Ver Exercícios</button>
           <button class="btn btn-secondary" onclick="navigateTo('plans')" style="justify-content:flex-start;">📋 Criar Plano</button>
           <button class="btn btn-secondary" onclick="navigateTo('favorites')" style="justify-content:flex-start;">⭐ Meus Favoritos</button>
+          <button class="btn btn-secondary" onclick="navigateTo('ortoflix')" style="justify-content:flex-start;border-color:var(--accent);color:var(--accent);">🎬 Conheça a OrtoFlix</button>
         </div>
         <div id="admin-quick" class="hidden">
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;">

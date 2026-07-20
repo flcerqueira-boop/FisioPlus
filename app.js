@@ -148,6 +148,13 @@ function showApp() {
     roleEl.classList.add("hidden");
     hide("admin-nav");
     hide("admin-quick");
+    // Esconder cards de admin
+    el("stat-users-card").style.display = "none";
+    el("stat-suggestions-card").style.display = "none";
+    // Mostrar cards de profissional
+    el("stat-exercises-card").style.display = "flex";
+    el("stat-plans-card").style.display = "flex";
+    el("stat-favorites-card").style.display = "flex";
     // Início Rápido visível
     el("dashboard-pro-actions").style.display = "grid";
     // Bottom nav profissional
