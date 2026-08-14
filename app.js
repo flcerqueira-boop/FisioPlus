@@ -120,8 +120,33 @@ function showPendingScreen(rejected = false) {
     el("pending-text").textContent = "Sua solicitação foi recebida! O administrador irá revisar e aprovar seu acesso em breve. Você receberá uma notificação quando seu cadastro for liberado.";
   }
 }
+function showHub() {
+  hide("auth-screen"); hide("pending-screen"); hide("patient-view"); hide("app");
+  show("hub-screen");
+  updateHubGreeting();
+}
+
+function updateHubGreeting() {
+  const greeting = document.getElementById("hub-greeting");
+  if (!greeting || !currentUserData) return;
+  const name = currentUserData.name || "Profissional";
+  const firstName = name.split(" ")[0];
+  const hour = new Date().getHours();
+  const period = hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite";
+  greeting.innerHTML = `👋 ${period}, <strong style="color:var(--text);">${firstName}</strong>! Bem-vindo ao seu portal clínico.`;
+}
+
+window.enterApp = () => {
+  hide("hub-screen");
+  show("app");
+  navigateTo("dashboard");
+  loadFavorites();
+};
+
 function showApp() {
   hide("auth-screen"); hide("pending-screen"); hide("patient-view");
+  showHub();
+  return;
   show("app");
   const roleEl = el("header-role-badge");
   if (currentUserData.role === "admin") {
