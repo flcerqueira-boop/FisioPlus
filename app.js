@@ -130,10 +130,17 @@ function updateHubGreeting() {
   const greeting = document.getElementById("hub-greeting");
   if (!greeting || !currentUserData) return;
   const name = currentUserData.name || "Profissional";
-  const firstName = name.split(" ")[0];
+  const parts = name.trim().split(" ");
+  const titles = ["dr.", "dra.", "prof.", "prof", "dr", "dra", "me.", "me"];
+  const hasTitle = titles.includes(parts[0].toLowerCase());
+  const nameParts = hasTitle ? parts.slice(1) : parts;
+  const displayName = nameParts.length >= 2
+    ? `${nameParts[0]} ${nameParts[nameParts.length - 1]}`
+    : nameParts[0] || name;
+  const fullDisplay = `Dr. ${displayName}`;
   const hour = new Date().getHours();
   const period = hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite";
-  greeting.innerHTML = `👋 ${period}, <strong style="color:var(--text);">${firstName}</strong>! Bem-vindo ao seu portal clínico.`;
+  greeting.innerHTML = `👋 ${period}, <strong style="color:var(--text);">${fullDisplay}</strong>! Bem-vindo ao seu portal clínico.`;
 }
 
 window.enterApp = () => {
