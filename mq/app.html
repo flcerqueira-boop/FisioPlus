@@ -28,13 +28,15 @@
         apiKey: "AIzaSyDe_7GdbVfwcVeG19lj_4ZkL0zKZaLP68o",
         authDomain: "fisioplus-cd92b.firebaseapp.com",
         projectId: "fisioplus-cd92b",
-      });
+      }, "fisioplus-check");
 
       const auth = getAuth(app);
       const db = getFirestore(app);
 
-      // App secundário: Firebase do FisioQ (fisioq-b2c0a), usado só pra logar
-      // anonimamente antes de carregar o app.js e evitar a tela de login dele.
+      // App do FisioQ com o MESMO nome padrão ("[DEFAULT]") que o app.js dele usa.
+      // Assim, quando o app.js chamar initializeApp() de novo com a mesma config,
+      // o Firebase reconhece que é o mesmo app e reaproveita a sessão já aberta aqui,
+      // em vez de criar uma instância separada (que não teria a sessão anônima).
       const appFQ = initializeAppFQ({
         apiKey: "AIzaSyAfRmWEYBpw1vv6RFnjD8ne5X3PRgqFQfE",
         authDomain: "fisioq-b2c0a.firebaseapp.com",
@@ -42,7 +44,7 @@
         storageBucket: "fisioq-b2c0a.firebasestorage.app",
         messagingSenderId: "144943233360",
         appId: "1:144943233360:web:f500ded7fb0d9d7b9a9455",
-      }, "fisioq-bridge");
+      });
 
       const authFQ = getAuthFQ(appFQ);
 
