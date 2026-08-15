@@ -16,14 +16,12 @@
 
     <meta name="theme-color" content="#0B1E3D"/>
 
-    <!-- Verificação de autenticação Fisio+ -->
     <script type="module">
       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-      import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+      import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
       import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-      import { initializeApp as initializeAppFQ } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-      import { getAuth as getAuthFQ, onAuthStateChanged as onAuthStateChangedFQ, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
+      // App do Fisio+ — checa quem está logado (nome customizado, não é o app padrão)
       const app = initializeApp({
         apiKey: "AIzaSyDe_7GdbVfwcVeG19lj_4ZkL0zKZaLP68o",
         authDomain: "fisioplus-cd92b.firebaseapp.com",
@@ -34,10 +32,10 @@
       const db = getFirestore(app);
 
       // App do FisioQ com o MESMO nome padrão ("[DEFAULT]") que o app.js dele usa.
-      // Assim, quando o app.js chamar initializeApp() de novo com a mesma config,
-      // o Firebase reconhece que é o mesmo app e reaproveita a sessão já aberta aqui,
-      // em vez de criar uma instância separada (que não teria a sessão anônima).
-      const appFQ = initializeAppFQ({
+      // Serve só pra ter uma sessão válida no Firestore do FisioQ (as regras de
+      // segurança dele provavelmente exigem algum request.auth) — NÃO controla
+      // mais acesso: quem entra ou não é decidido só pelo login do Fisio+.
+      const appFQ = initializeApp({
         apiKey: "AIzaSyAfRmWEYBpw1vv6RFnjD8ne5X3PRgqFQfE",
         authDomain: "fisioq-b2c0a.firebaseapp.com",
         projectId: "fisioq-b2c0a",
@@ -45,25 +43,21 @@
         messagingSenderId: "144943233360",
         appId: "1:144943233360:web:f500ded7fb0d9d7b9a9455",
       });
+      const authFQ = getAuth(appFQ);
 
-      const authFQ = getAuthFQ(appFQ);
-
-      function garantirSessaoFisioQ() {
+      function garantirSessaoAnonimaFisioQ() {
         return new Promise((resolve) => {
-          onAuthStateChangedFQ(authFQ, (userFQ) => {
-            if (userFQ) {
+          if (authFQ.currentUser) { resolve(); return; }
+          signInAnonymously(authFQ)
+            .then(() => resolve())
+            .catch((e) => {
+              // Não bloqueia o acesso ao app — só pode afetar salvar/ler dados.
+              console.warn("Sessão técnica do FisioQ falhou (dados podem não salvar):", e);
               resolve();
-            } else {
-              signInAnonymously(authFQ).then(resolve).catch((e) => {
-                console.warn("Login anônimo do FisioQ falhou:", e);
-                resolve(); // segue mesmo assim, pra não travar tudo
-              });
-            }
-          });
+            });
         });
       }
 
-      // Mostrar loading
       document.getElementById('root').innerHTML = `
         <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#0B1E3D;">
           <div style="text-align:center;color:white;font-family:sans-serif;">
@@ -72,34 +66,39 @@
           </div>
         </div>`;
 
-      async function verificarAcesso(user) {
-        if (!user) {
-          window.location.href = "https://fisiomais.ortoflix.com";
-          return;
-        }
+      async function carregarMQ(user) {
         try {
           const userDoc = await getDoc(doc(db, "users", user.uid));
           if (!userDoc.exists() || userDoc.data().status !== "approved") {
             window.location.href = "https://fisiomais.ortoflix.com";
             return;
           }
-          // Aprovado — garante sessão no Firebase do FisioQ (anônima, sem tela)
-          // antes de injetar o app.js, pra ele não pedir login de novo.
-          await garantirSessaoFisioQ();
-          document.getElementById('root').innerHTML = '';
-          const script = document.createElement('script');
-          script.type = 'module';
-          script.crossOrigin = true;
-          script.src = '/mq/app.js';
-          document.head.appendChild(script);
-        } catch(e) {
+        } catch (e) {
           window.location.href = "https://fisiomais.ortoflix.com";
+          return;
         }
+
+        // Repassa a identidade do Fisio+ pro app.js usar — ele vai pular
+        // toda a checagem própria de login quando enxergar isso.
+        window.__fisioplusUser = {
+          uid: user.uid,
+          email: user.email,
+          displayName: user.displayName || user.email,
+        };
+
+        await garantirSessaoAnonimaFisioQ();
+
+        document.getElementById('root').innerHTML = '';
+        const script = document.createElement('script');
+        script.type = 'module';
+        script.crossOrigin = true;
+        script.src = '/mq/app.js';
+        document.head.appendChild(script);
       }
 
       onAuthStateChanged(auth, (user) => {
         if (user) {
-          verificarAcesso(user);
+          carregarMQ(user);
         } else {
           window.location.href = "https://fisiomais.ortoflix.com";
         }
