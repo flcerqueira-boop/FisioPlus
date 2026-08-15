@@ -21,6 +21,8 @@
       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
       import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
       import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+      import { initializeApp as initializeAppFQ } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+      import { getAuth as getAuthFQ, onAuthStateChanged as onAuthStateChangedFQ, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
       const app = initializeApp({
         apiKey: "AIzaSyDe_7GdbVfwcVeG19lj_4ZkL0zKZaLP68o",
@@ -30,6 +32,34 @@
 
       const auth = getAuth(app);
       const db = getFirestore(app);
+
+      // App secundário: Firebase do FisioQ (fisioq-b2c0a), usado só pra logar
+      // anonimamente antes de carregar o app.js e evitar a tela de login dele.
+      const appFQ = initializeAppFQ({
+        apiKey: "AIzaSyAfRmWEYBpw1vv6RFnjD8ne5X3PRgqFQfE",
+        authDomain: "fisioq-b2c0a.firebaseapp.com",
+        projectId: "fisioq-b2c0a",
+        storageBucket: "fisioq-b2c0a.firebasestorage.app",
+        messagingSenderId: "144943233360",
+        appId: "1:144943233360:web:f500ded7fb0d9d7b9a9455",
+      }, "fisioq-bridge");
+
+      const authFQ = getAuthFQ(appFQ);
+
+      function garantirSessaoFisioQ() {
+        return new Promise((resolve) => {
+          onAuthStateChangedFQ(authFQ, (userFQ) => {
+            if (userFQ) {
+              resolve();
+            } else {
+              signInAnonymously(authFQ).then(resolve).catch((e) => {
+                console.warn("Login anônimo do FisioQ falhou:", e);
+                resolve(); // segue mesmo assim, pra não travar tudo
+              });
+            }
+          });
+        });
+      }
 
       // Mostrar loading
       document.getElementById('root').innerHTML = `
@@ -51,7 +81,9 @@
             window.location.href = "https://fisiomais.ortoflix.com";
             return;
           }
-          // Aprovado — carrega o app
+          // Aprovado — garante sessão no Firebase do FisioQ (anônima, sem tela)
+          // antes de injetar o app.js, pra ele não pedir login de novo.
+          await garantirSessaoFisioQ();
           document.getElementById('root').innerHTML = '';
           const script = document.createElement('script');
           script.type = 'module';
