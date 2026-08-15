@@ -38,6 +38,15 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+window.trackCardClick = (card) => {
+  try {
+    const uid = auth.currentUser ? auth.currentUser.uid : null;
+    addDoc(collection(db, "card_clicks"), {
+      card, uid, createdAt: serverTimestamp()
+    }).catch(() => {});
+  } catch (e) {}
+};
+
 // ─── STATE ────────────────────────────────────────────────────────────────
 let currentUser = null;
 let currentUserData = null;
