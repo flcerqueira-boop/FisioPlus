@@ -57,6 +57,22 @@
           </div>
         </div>`;
 
+      function carregarAppJs() {
+        document.getElementById('root').innerHTML = '';
+        const script = document.createElement('script');
+        script.type = 'module';
+        script.crossOrigin = true;
+        script.src = '/mq/app.js';
+        document.head.appendChild(script);
+      }
+
+      // Link enviado pro paciente (?q=...) — não exige login nenhum,
+      // nem do Fisio+ nem do FisioQ. Vai direto pro questionário.
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('q')) {
+        carregarAppJs();
+      } else {
+
       async function carregarMQ(user) {
         try {
           const userDoc = await getDoc(doc(db, "users", user.uid));
@@ -78,12 +94,7 @@
           displayName: user.displayName || user.email,
         };
 
-        document.getElementById('root').innerHTML = '';
-        const script = document.createElement('script');
-        script.type = 'module';
-        script.crossOrigin = true;
-        script.src = '/mq/app.js';
-        document.head.appendChild(script);
+        carregarAppJs();
       }
 
       onAuthStateChanged(auth, (user) => {
@@ -93,6 +104,8 @@
           mostrarErro("Nenhum usuário logado no Fisio+", "onAuthStateChanged retornou null");
         }
       });
+
+      }
     </script>
   </head>
   <body>
