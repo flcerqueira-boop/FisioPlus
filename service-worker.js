@@ -1,4 +1,4 @@
-const CACHE_VERSION = "fisioplus-v3";
+const CACHE_VERSION = "fisioplus-v4";
 const STATIC_ASSETS = [
   "/",
   "/index.html",
@@ -34,14 +34,18 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   const url = event.request.url;
 
-  // Nunca intercepta Firebase, EmailJS ou Google Fonts
+  // Nunca intercepta Firebase, EmailJS, Google Fonts, o painel admin
+  // ou o módulo MQ — essas páginas sempre buscam direto da rede, sem
+  // passar pelo cache do Service Worker.
   if (
     url.includes("firestore") ||
     url.includes("firebase") ||
     url.includes("googleapis") ||
     url.includes("emailjs") ||
     url.includes("gstatic.com") ||
-    url.includes("fonts.googleapis")
+    url.includes("fonts.googleapis") ||
+    url.includes("painel.html") ||
+    url.includes("/mq/")
   ) {
     return;
   }
