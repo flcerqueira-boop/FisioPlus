@@ -18,53 +18,24 @@
 
     <script type="module">
       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-      import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+      import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
       import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-      // App do Fisio+ — checa quem está logado (nome customizado, não é o app padrão)
-      const app = initializeApp({
+      // MESMA config e MESMO nome (padrão, sem 2º parâmetro) que o index.html
+      // principal do Fisio+ usa. Isso é essencial: é o que permite enxergar a
+      // sessão já aberta lá, sem pedir login de novo aqui.
+      const firebaseConfig = {
         apiKey: "AIzaSyDe_7GdbVfwcVeG19lj_4ZkL0zKZaLP68o",
         authDomain: "fisioplus-cd92b.firebaseapp.com",
         projectId: "fisioplus-cd92b",
-      }, "fisioplus-check");
+        storageBucket: "fisioplus-cd92b.firebasestorage.app",
+        messagingSenderId: "137208430197",
+        appId: "1:137208430197:web:6be479df7f7bc7fb31023c"
+      };
 
+      const app = initializeApp(firebaseConfig);
       const auth = getAuth(app);
       const db = getFirestore(app);
-
-      // App do FisioQ com o MESMO nome padrão ("[DEFAULT]") que o app.js dele usa.
-      // Serve só pra ter uma sessão válida no Firestore do FisioQ (as regras de
-      // segurança dele provavelmente exigem algum request.auth) — NÃO controla
-      // mais acesso: quem entra ou não é decidido só pelo login do Fisio+.
-      const appFQ = initializeApp({
-        apiKey: "AIzaSyAfRmWEYBpw1vv6RFnjD8ne5X3PRgqFQfE",
-        authDomain: "fisioq-b2c0a.firebaseapp.com",
-        projectId: "fisioq-b2c0a",
-        storageBucket: "fisioq-b2c0a.firebasestorage.app",
-        messagingSenderId: "144943233360",
-        appId: "1:144943233360:web:f500ded7fb0d9d7b9a9455",
-      });
-      const authFQ = getAuth(appFQ);
-
-      function garantirSessaoAnonimaFisioQ() {
-        return new Promise((resolve) => {
-          if (authFQ.currentUser) { resolve(); return; }
-          signInAnonymously(authFQ)
-            .then(() => resolve())
-            .catch((e) => {
-              // Não bloqueia o acesso ao app — só pode afetar salvar/ler dados.
-              console.warn("Sessão técnica do FisioQ falhou (dados podem não salvar):", e);
-              resolve();
-            });
-        });
-      }
-
-      document.getElementById('root').innerHTML = `
-        <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#0B1E3D;">
-          <div style="text-align:center;color:white;font-family:sans-serif;">
-            <div style="font-size:32px;margin-bottom:12px;">📋</div>
-            <div style="font-size:14px;color:rgba(255,255,255,0.6);">Carregando...</div>
-          </div>
-        </div>`;
 
       function mostrarErro(titulo, detalhe) {
         document.getElementById('root').innerHTML = `
@@ -77,6 +48,14 @@
             </div>
           </div>`;
       }
+
+      document.getElementById('root').innerHTML = `
+        <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#0B1E3D;">
+          <div style="text-align:center;color:white;font-family:sans-serif;">
+            <div style="font-size:32px;margin-bottom:12px;">📋</div>
+            <div style="font-size:14px;color:rgba(255,255,255,0.6);">Carregando...</div>
+          </div>
+        </div>`;
 
       async function carregarMQ(user) {
         try {
@@ -91,14 +70,13 @@
         }
 
         // Repassa a identidade do Fisio+ pro app.js usar — ele vai pular
-        // toda a checagem própria de login quando enxergar isso.
+        // a checagem própria de login e cuidar sozinho da sessão técnica
+        // que precisa pro Firestore dele.
         window.__fisioplusUser = {
           uid: user.uid,
           email: user.email,
           displayName: user.displayName || user.email,
         };
-
-        await garantirSessaoAnonimaFisioQ();
 
         document.getElementById('root').innerHTML = '';
         const script = document.createElement('script');
