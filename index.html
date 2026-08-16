@@ -337,9 +337,9 @@
       <div style="max-width:600px;margin:0 auto;padding:10px 20px 0;text-align:center;border-top:1px solid var(--border);font-size:13px;color:var(--text-muted);">Portal do Fisioterapeuta</div>
       <!-- Links -->
       <div style="max-width:600px;margin:0 auto;padding:10px 20px 16px;display:flex;align-items:center;justify-content:center;gap:10px;font-size:12px;color:var(--text-muted);">
-        <span style="cursor:pointer;">Sobre</span>
+        <span style="cursor:pointer;" onclick="openAboutModal()">Sobre</span>
         <span style="color:var(--text-subtle);">·</span>
-        <span style="cursor:pointer;" onclick="window.dispatchEvent(new Event('pwa-install'))">Instalar app</span>
+        <span style="cursor:pointer;" onclick="openInstallModal()">Instalar app</span>
         <span style="color:var(--text-subtle);">·</span>
         <span style="cursor:pointer;" onclick="doLogout()">Sair da conta</span>
       </div>
@@ -698,6 +698,61 @@
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeSuggestionModal()">Cancelar</button>
       <button class="btn btn-primary" style="width:auto;" onclick="submitSuggestion()">📤 Enviar Sugestão</button>
+    </div>
+  </div>
+</div>
+
+<!-- SOBRE MODAL -->
+<div id="about-modal" class="modal-overlay hidden">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-body" style="padding:32px 28px;">
+      <p style="color:var(--text);font-size:15px;line-height:1.7;margin-bottom:16px;">Olá! Eu sou o Prof. Felipe Cerqueira, fisioterapeuta, professor e diretor da OrtoFlix.</p>
+      <p style="color:var(--text);font-size:15px;line-height:1.7;margin-bottom:16px;">Criei o Fisio+ para reunir, num só lugar, as ferramentas que uso no dia a dia da prática clínica — sem precisar abrir vários sites ou apps diferentes.</p>
+      <p style="color:var(--text);font-size:15px;line-height:1.7;margin-bottom:8px;">Hoje o Fisio+ tem:</p>
+      <ul style="color:var(--text-muted);font-size:14px;line-height:1.8;margin:0 0 16px;padding-left:20px;">
+        <li><strong style="color:var(--text);">Exercícios Domiciliares (ME)</strong> — prescrição de exercícios com link direto para o paciente.</li>
+        <li><strong style="color:var(--text);">Questionários Funcionais (MQ)</strong> — os principais questionários de avaliação clínica usados na fisioterapia ortopédica, com link de resposta para o paciente.</li>
+        <li><strong style="color:var(--text);">CBDF</strong> — acesso rápido à Classificação Brasileira de Diagnóstico Fisioterapêutico do COFFITO.</li>
+        <li><strong style="color:var(--text);">OrtoFlix</strong> — acesso à plataforma de streaming com conteúdo em série sobre raciocínio clínico ortopédico.</li>
+      </ul>
+      <p style="color:var(--text);font-size:15px;line-height:1.7;margin-bottom:20px;">O Fisio+ faz parte da OrtoFlix, uma plataforma que desenvolvi para compartilhar conhecimento em fisioterapia ortopédica. Se quiser conhecer um pouco mais sobre esse projeto, basta clicar abaixo.</p>
+      <a href="https://www.ortoflix.com" target="_blank" class="btn btn-primary" style="text-decoration:none;display:block;text-align:center;">Conhecer a OrtoFlix →</a>
+    </div>
+    <div class="modal-footer" style="justify-content:center;border-top:none;padding-top:0;">
+      <span style="cursor:pointer;color:var(--text-muted);font-size:13px;" onclick="closeAboutModal()">Fechar</span>
+    </div>
+  </div>
+</div>
+
+<!-- INSTALAR APP MODAL -->
+<div id="install-modal" class="modal-overlay hidden">
+  <div class="modal" style="max-width:440px;">
+    <div class="modal-header">
+      <div class="modal-title">Instalar o Fisio+</div>
+      <button class="modal-close" onclick="closeInstallModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="display:flex;gap:8px;background:var(--bg);border-radius:10px;padding:4px;margin-bottom:20px;">
+        <button id="install-tab-ios" class="btn" style="flex:1;padding:10px;font-size:13px;" onclick="showInstallTab('ios')">iPhone</button>
+        <button id="install-tab-android" class="btn" style="flex:1;padding:10px;font-size:13px;" onclick="showInstallTab('android')">Android</button>
+      </div>
+      <div id="install-steps-ios" style="color:var(--text);font-size:14px;line-height:1.9;">
+        <p><strong>1.</strong> Abra o Fisio+ no <strong>Safari</strong>.</p>
+        <p><strong>2.</strong> Toque no ícone de compartilhar <strong>􀈂</strong> (o quadrado com a seta pra cima), na barra inferior.</p>
+        <p><strong>3.</strong> Toque em <strong>"Adicionar à Tela de Início"</strong>.</p>
+        <p><strong>4.</strong> Confirme tocando em <strong>"Adicionar"</strong>.</p>
+        <p style="color:var(--text-muted);font-size:13px;margin-top:16px;">Depois disso, o ícone do Fisio+ fica na sua tela inicial, igual a um aplicativo normal.</p>
+      </div>
+      <div id="install-steps-android" style="color:var(--text);font-size:14px;line-height:1.9;display:none;">
+        <p><strong>1.</strong> Abra o Fisio+ no <strong>Chrome</strong>.</p>
+        <p><strong>2.</strong> Toque nos três pontinhos (⋮) no canto superior direito.</p>
+        <p><strong>3.</strong> Toque em <strong>"Adicionar à tela inicial"</strong> (ou "Instalar app").</p>
+        <p><strong>4.</strong> Confirme tocando em <strong>"Adicionar"</strong> ou <strong>"Instalar"</strong>.</p>
+        <p style="color:var(--text-muted);font-size:13px;margin-top:16px;">Depois disso, o ícone do Fisio+ fica na sua tela inicial, igual a um aplicativo normal.</p>
+      </div>
+    </div>
+    <div class="modal-footer" style="justify-content:center;">
+      <span style="cursor:pointer;color:var(--text-muted);font-size:13px;" onclick="closeInstallModal()">Fechar</span>
     </div>
   </div>
 </div>

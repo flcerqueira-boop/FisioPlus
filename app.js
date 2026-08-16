@@ -912,6 +912,39 @@ window.demoteAdmin = async (uid, email) => {
   loadUsers();
 };
 
+// ─── SOBRE / INSTALAR APP ───────────────────────────────────────────────
+window.openAboutModal = () => show("about-modal");
+window.closeAboutModal = () => hide("about-modal");
+
+window.openInstallModal = () => {
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+  showInstallTab(isIOS ? "ios" : "android");
+  show("install-modal");
+};
+window.closeInstallModal = () => hide("install-modal");
+
+window.showInstallTab = (platform) => {
+  const iosTab = el("install-tab-ios");
+  const androidTab = el("install-tab-android");
+  const iosSteps = el("install-steps-ios");
+  const androidSteps = el("install-steps-android");
+  if (platform === "ios") {
+    iosSteps.style.display = "block";
+    androidSteps.style.display = "none";
+    iosTab.style.background = "var(--accent)";
+    iosTab.style.color = "#fff";
+    androidTab.style.background = "transparent";
+    androidTab.style.color = "var(--text-muted)";
+  } else {
+    iosSteps.style.display = "none";
+    androidSteps.style.display = "block";
+    androidTab.style.background = "var(--accent)";
+    androidTab.style.color = "#fff";
+    iosTab.style.background = "transparent";
+    iosTab.style.color = "var(--text-muted)";
+  }
+};
+
 // ─── SUGGESTIONS ──────────────────────────────────────────────────────────
 window.openSuggestionModal = () => {
   el("sug-name").value = "";
