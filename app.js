@@ -845,7 +845,7 @@ async function loadUsers() {
     }
     tbody.innerHTML = snap.docs.map(d => {
       const u = d.data();
-      const isAdmin = u.email === ADMIN_EMAIL;
+      const isAdmin = u.role === "admin";
       const statusBadge = isAdmin
         ? `<span class="badge badge-admin">Admin</span>`
         : u.status === "approved"
@@ -853,14 +853,19 @@ async function loadUsers() {
           : u.status === "rejected"
             ? `<span class="badge" style="background:rgba(248,81,73,0.15);color:#f85149;">❌ Rejeitado</span>`
             : `<span class="badge badge-pending">⏳ Pendente</span>`;
-      const actions = isAdmin ? "—" : u.status === "pending"
+      const actions = isAdmin
+        ? `<button class="btn btn-secondary btn-sm" onclick="demoteAdmin('${d.id}', '${u.email}')">Remover admin</button>`
+        : u.status === "pending"
         ? `<div style="display:flex;gap:6px;">
             <button class="btn btn-primary btn-sm" onclick="approveUser('${d.id}')">✅ Aprovar</button>
             <button class="btn btn-danger btn-sm" onclick="rejectUser('${d.id}', '${u.email}')">❌ Rejeitar</button>
            </div>`
         : u.status === "rejected"
           ? `<button class="btn btn-secondary btn-sm" onclick="approveUser('${d.id}')">✅ Aprovar assim mesmo</button>`
-          : `<button class="btn btn-danger btn-sm" onclick="revokeUser('${d.id}')">🚫 Revogar</button>`;
+          : `<div style="display:flex;gap:6px;">
+              <button class="btn btn-danger btn-sm" onclick="revokeUser('${d.id}')">🚫 Revogar</button>
+              <button class="btn btn-secondary btn-sm" onclick="promoteAdmin('${d.id}', '${u.email}')">⭐ Tornar admin</button>
+             </div>`;
       return `<tr>
         <td><strong>${u.name || "—"}</strong></td>
         <td>${u.email}</td>
@@ -892,6 +897,18 @@ window.rejectUser = async (uid, email) => {
 window.revokeUser = async (uid) => {
   if (!confirm("Revogar acesso deste usuário?")) return;
   await updateDoc(doc(db, "users", uid), { status: "pending" });
+  loadUsers();
+};
+
+window.promoteAdmin = async (uid, email) => {
+  if (!confirm(`Tornar ${email} administrador? Isso dá acesso total ao painel e à gestão de usuários.`)) return;
+  await updateDoc(doc(db, "users", uid), { role: "admin" });
+  loadUsers();
+};
+
+window.demoteAdmin = async (uid, email) => {
+  if (!confirm(`Remover privilégio de admin de ${email}?`)) return;
+  await updateDoc(doc(db, "users", uid), { role: "professional" });
   loadUsers();
 };
 

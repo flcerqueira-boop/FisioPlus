@@ -125,9 +125,20 @@
       verificarAdmin();
 
       function verificarAdmin() {
-        onAuthStateChanged(auth, (user) => {
+        onAuthStateChanged(auth, async (user) => {
           document.getElementById('loading-screen').classList.add('hidden');
-          if (user && user.email === ADMIN_EMAIL) {
+          if (!user) {
+            document.getElementById('no-admin-screen').classList.remove('hidden');
+            return;
+          }
+          let ehAdmin = user.email === ADMIN_EMAIL;
+          if (!ehAdmin) {
+            try {
+              const userDoc = await getDoc(doc(db, "users", user.uid));
+              ehAdmin = userDoc.exists() && userDoc.data().role === "admin";
+            } catch (e) {}
+          }
+          if (ehAdmin) {
             document.getElementById('panel').classList.remove('hidden');
             carregarUsuarios();
             carregarAnalytics();
@@ -159,20 +170,25 @@
           }
 
           tbody.innerHTML = allUsers.map(u => {
-            const isAdmin = u.email === ADMIN_EMAIL;
+            const isAdmin = u.role === "admin";
             const statusBadge = isAdmin
               ? `<span class="badge badge-admin">Admin</span>`
               : u.status === "approved" ? `<span class="badge badge-approved">Ativo</span>`
               : u.status === "rejected" ? `<span class="badge badge-rejected">Rejeitado</span>`
               : `<span class="badge badge-pending">Pendente</span>`;
-            const actions = isAdmin ? "—" : u.status === "pending"
+            const actions = isAdmin
+              ? `<button class="btn btn-secondary" style="padding:6px 10px;font-size:11px;" onclick="demoteAdmin('${u.id}')">Remover admin</button>`
+              : u.status === "pending"
               ? `<div style="display:flex;gap:6px;">
                   <button class="btn btn-primary" style="padding:6px 10px;font-size:11px;" onclick="approveUser('${u.id}')">Aprovar</button>
                   <button class="btn btn-danger" style="padding:6px 10px;font-size:11px;" onclick="rejectUser('${u.id}')">Rejeitar</button>
                  </div>`
               : u.status === "rejected"
                 ? `<button class="btn btn-secondary" style="padding:6px 10px;font-size:11px;" onclick="approveUser('${u.id}')">Aprovar assim mesmo</button>`
-                : `<button class="btn btn-danger" style="padding:6px 10px;font-size:11px;" onclick="revokeUser('${u.id}')">Revogar</button>`;
+                : `<div style="display:flex;gap:6px;">
+                    <button class="btn btn-danger" style="padding:6px 10px;font-size:11px;" onclick="revokeUser('${u.id}')">Revogar</button>
+                    <button class="btn btn-secondary" style="padding:6px 10px;font-size:11px;" onclick="promoteAdmin('${u.id}')">⭐ Tornar admin</button>
+                   </div>`;
             return `<tr>
               <td><strong>${u.name || "—"}</strong></td>
               <td style="color:var(--text-muted);">${u.email || "—"}</td>
@@ -197,6 +213,18 @@
       window.revokeUser = async (uid) => {
         if (!confirm("Revogar o acesso deste usuário?")) return;
         await updateDoc(doc(db, "users", uid), { status: "pending" });
+        carregarUsuarios();
+      };
+      window.promoteAdmin = async (uid) => {
+        const u = allUsers.find(x => x.id === uid);
+        if (!confirm(`Tornar ${u ? u.email : "este usuário"} administrador? Isso dá acesso total ao painel.`)) return;
+        await updateDoc(doc(db, "users", uid), { role: "admin" });
+        carregarUsuarios();
+      };
+      window.demoteAdmin = async (uid) => {
+        const u = allUsers.find(x => x.id === uid);
+        if (!confirm(`Remover privilégio de admin de ${u ? u.email : "este usuário"}?`)) return;
+        await updateDoc(doc(db, "users", uid), { role: "professional" });
         carregarUsuarios();
       };
 
