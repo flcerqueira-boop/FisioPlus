@@ -757,6 +757,23 @@
   </div>
 </div>
 
+<!-- CAMPANHA PROMOCIONAL MODAL -->
+<div id="promo-modal" class="modal-overlay hidden">
+  <div class="modal" style="max-width:420px;background:linear-gradient(160deg,#1a1015,var(--surface));border:1px solid rgba(249,115,22,0.35);">
+    <div class="modal-body" style="padding:36px 28px 28px;text-align:center;">
+      <div style="font-size:44px;margin-bottom:8px;">🎉</div>
+      <div id="promo-title" style="font-family:'Syne',sans-serif;font-weight:800;font-size:22px;color:var(--text);margin-bottom:16px;line-height:1.3;"></div>
+      <div id="promo-message" style="color:var(--text-muted);font-size:14px;line-height:1.7;margin-bottom:24px;"></div>
+      <div style="background:var(--accent-soft);border:1px dashed var(--accent);border-radius:12px;padding:16px;margin-bottom:20px;">
+        <div id="promo-cta" style="color:var(--accent);font-weight:700;font-size:14px;"></div>
+      </div>
+    </div>
+    <div class="modal-footer" style="justify-content:center;border-top:none;padding-top:0;">
+      <button class="btn btn-primary" style="width:auto;padding:10px 32px;" onclick="closePromoModal()">Entendi, vou printar!</button>
+    </div>
+  </div>
+</div>
+
 <!-- EXERCISE MODAL -->
 <div id="exercise-modal" class="modal-overlay hidden">
   <div class="modal">

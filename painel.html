@@ -69,6 +69,36 @@
           <div class="card"><div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;">Rejeitados</div><div id="stat-rejected" class="syne" style="font-size:28px;font-weight:800;margin-top:4px;color:#f85149;">–</div></div>
         </div>
 
+        <!-- Campanha Promocional -->
+        <div class="card" style="margin-bottom:20px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+            <div class="syne" style="font-weight:700;font-size:13px;">🎉 Campanha promocional (pop-up no hub)</div>
+            <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-muted);cursor:pointer;">
+              <input type="checkbox" id="promo-active" style="width:16px;height:16px;" />
+              Ativa
+            </label>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div>
+              <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">Título</label>
+              <input id="promo-title-input" placeholder="Ex: 🎉 Você ganhou 50% de desconto!" />
+            </div>
+            <div>
+              <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">Mensagem</label>
+              <textarea id="promo-message-input" rows="3" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:12px 14px;font-size:14px;font-family:inherit;resize:vertical;" placeholder="Descreva a promoção..."></textarea>
+            </div>
+            <div>
+              <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">Chamada de ação (CTA)</label>
+              <input id="promo-cta-input" placeholder="Ex: 📸 Print esta tela e envie para @felipe_cerqueira no Instagram" />
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;">
+            <button class="btn btn-primary" onclick="salvarPromo(false)">💾 Salvar</button>
+            <button class="btn btn-secondary" onclick="salvarPromo(true)">🔄 Salvar como nova campanha (mostrar pra todos de novo)</button>
+          </div>
+          <div id="promo-status" style="font-size:12px;color:var(--text-muted);margin-top:10px;"></div>
+        </div>
+
         <!-- Analytics de cliques -->
         <div class="card" style="margin-bottom:20px;">
           <div class="syne" style="font-weight:700;font-size:13px;margin-bottom:14px;">Cliques nos cards do hub (últimos 30 dias)</div>
@@ -97,8 +127,8 @@
       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
       import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
       import {
-        getFirestore, collection, doc, getDoc, getDocs, updateDoc,
-        query, where, orderBy
+        getFirestore, collection, doc, getDoc, getDocs, updateDoc, setDoc,
+        query, where, orderBy, serverTimestamp
       } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
       // MESMA config e MESMO nome (padrão) que o index.html principal —
@@ -142,6 +172,7 @@
             document.getElementById('panel').classList.remove('hidden');
             carregarUsuarios();
             carregarAnalytics();
+            carregarPromo();
           } else {
             document.getElementById('no-admin-screen').classList.remove('hidden');
           }
@@ -226,6 +257,47 @@
         if (!confirm(`Remover privilégio de admin de ${u ? u.email : "este usuário"}?`)) return;
         await updateDoc(doc(db, "users", uid), { role: "professional" });
         carregarUsuarios();
+      };
+
+      // ─── CAMPANHA PROMOCIONAL ─────────────────────────────────────────────
+      async function carregarPromo() {
+        try {
+          const snap = await getDoc(doc(db, "config", "promo"));
+          if (snap.exists()) {
+            const d = snap.data();
+            document.getElementById('promo-active').checked = !!d.active;
+            document.getElementById('promo-title-input').value = d.title || "";
+            document.getElementById('promo-message-input').value = d.message || "";
+            document.getElementById('promo-cta-input').value = d.cta || "";
+          }
+        } catch (e) {
+          document.getElementById('promo-status').textContent = `Erro ao carregar: ${e.message}`;
+        }
+      }
+
+      window.salvarPromo = async (novaCampanha) => {
+        const statusEl = document.getElementById('promo-status');
+        const data = {
+          active: document.getElementById('promo-active').checked,
+          title: document.getElementById('promo-title-input').value.trim(),
+          message: document.getElementById('promo-message-input').value.trim(),
+          cta: document.getElementById('promo-cta-input').value.trim(),
+          updatedAt: serverTimestamp(),
+        };
+        if (novaCampanha) {
+          data.version = Date.now();
+        }
+        try {
+          await setDoc(doc(db, "config", "promo"), data, { merge: true });
+          statusEl.style.color = "#3fb950";
+          statusEl.textContent = novaCampanha
+            ? "✅ Salvo como nova campanha — vai aparecer de novo pra todo mundo."
+            : "✅ Salvo.";
+          setTimeout(() => { statusEl.textContent = ""; }, 4000);
+        } catch (e) {
+          statusEl.style.color = "#f85149";
+          statusEl.textContent = `Erro ao salvar: ${e.message}`;
+        }
       };
 
       // ─── ANALYTICS DE CLIQUES ────────────────────────────────────────────

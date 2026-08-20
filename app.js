@@ -133,6 +133,7 @@ function showHub() {
   hide("auth-screen"); hide("pending-screen"); hide("patient-view"); hide("app");
   show("hub-screen");
   updateHubGreeting();
+  checkPromo();
 }
 
 function updateHubGreeting() {
@@ -151,6 +152,33 @@ function updateHubGreeting() {
   const period = hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite";
   greeting.innerHTML = `👋 ${period}, <strong style="color:var(--text);">${fullDisplay}</strong>! Bem-vindo ao seu portal clínico.`;
 }
+
+// ─── CAMPANHA PROMOCIONAL ────────────────────────────────────────────────
+async function checkPromo() {
+  try {
+    const snap = await getDoc(doc(db, "config", "promo"));
+    if (!snap.exists()) return;
+    const promo = snap.data();
+    if (!promo.active) return;
+    const version = promo.version || 1;
+    const seenKey = `promo_seen_v${version}`;
+    if (localStorage.getItem(seenKey)) return;
+    el("promo-title").textContent = promo.title || "";
+    el("promo-message").textContent = promo.message || "";
+    el("promo-cta").textContent = promo.cta || "";
+    show("promo-modal");
+    window.__promoSeenKey = seenKey;
+  } catch (e) {
+    // Silencioso — não deve atrapalhar o carregamento do hub
+  }
+}
+
+window.closePromoModal = () => {
+  hide("promo-modal");
+  if (window.__promoSeenKey) {
+    localStorage.setItem(window.__promoSeenKey, "1");
+  }
+};
 
 window.enterApp = () => {
   hide("hub-screen");
