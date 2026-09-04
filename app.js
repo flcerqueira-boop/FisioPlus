@@ -87,6 +87,22 @@ if (_patientPlanId) {
   });
 }
 
+// Quando a página é restaurada do cache do navegador (ex: botão/gesto
+// "voltar"), o Firebase já resolveu a sessão antes — não precisa esperar
+// de novo. Reaplica a tela certa direto, em vez de arriscar mostrar o
+// login por um instante (ou ficar preso nele).
+window.addEventListener("pageshow", (event) => {
+  if (!event.persisted) return;
+  if (currentUser && currentUserData) {
+    if (currentUserData.status === "pending") showPendingScreen(false);
+    else if (currentUserData.status === "rejected") showPendingScreen(true);
+    else if (!el("app").classList.contains("hidden")) { /* já estava dentro do ME, mantém */ hide("loading-screen-root"); }
+    else showHub();
+  } else if (!_patientPlanId) {
+    showAuthScreen();
+  }
+});
+
 async function loadUserData(user) {
   try {
     const userDoc = await getDoc(doc(db, "users", user.uid));
@@ -113,10 +129,12 @@ async function loadUserData(user) {
 
 // ─── AUTH SCREENS ─────────────────────────────────────────────────────────
 function showAuthScreen() {
+  hide("loading-screen-root");
   hide("app"); hide("pending-screen"); hide("patient-view");
   show("auth-screen");
 }
 function showPendingScreen(rejected = false) {
+  hide("loading-screen-root");
   hide("app"); hide("auth-screen"); hide("patient-view");
   show("pending-screen");
   if (rejected) {
@@ -130,6 +148,7 @@ function showPendingScreen(rejected = false) {
   }
 }
 function showHub() {
+  hide("loading-screen-root");
   hide("auth-screen"); hide("pending-screen"); hide("patient-view"); hide("app");
   show("hub-screen");
   updateHubGreeting();
@@ -206,6 +225,7 @@ function applyRoleUI() {
     show("nav-plans");
     show("nav-ortoflix");
     el("stat-users-card").style.display = "flex";
+    el("stat-pending-card").style.display = "flex";
     el("stat-exercises-card").style.display = "flex";
     el("stat-plans-card").style.display = "flex";
     el("stat-favorites-card").style.display = "flex";
@@ -395,6 +415,18 @@ async function checkPendingBadge() {
         badgeDash.style.display = "inline-flex";
       } else {
         badgeDash.classList.add("hidden");
+      }
+    }
+
+    // Card de cadastros pendentes no dashboard
+    el("stat-pending").textContent = count;
+    const badgePendingIcon = el("badge-pending-icon");
+    if (badgePendingIcon) {
+      badgePendingIcon.textContent = count;
+      if (count > 0) {
+        badgePendingIcon.classList.remove("hidden");
+      } else {
+        badgePendingIcon.classList.add("hidden");
       }
     }
 
@@ -1055,6 +1087,7 @@ window.deleteSuggestion = async (id) => {
 
 // ─── PATIENT VIEW ─────────────────────────────────────────────────────────
 async function showPatientView(planId) {
+  hide("loading-screen-root");
   hide("auth-screen"); hide("app"); hide("pending-screen");
   show("patient-view");
 
