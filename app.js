@@ -199,20 +199,22 @@ function applyRoleUI() {
     roleEl.textContent = "Admin";
     roleEl.className = "badge badge-admin";
     roleEl.classList.remove("hidden");
-    // Menu admin
+    // Menu admin + itens profissionais, tudo visível
     show("admin-nav");
     show("admin-quick");
-    hide("nav-favorites");
-    hide("nav-plans");
-    hide("nav-ortoflix");
+    show("nav-favorites");
+    show("nav-plans");
+    show("nav-ortoflix");
     el("stat-users-card").style.display = "flex";
-    hide("stat-favorites-card");
-    hide("stat-plans-card");
-    el("dashboard-pro-actions").style.display = "none";
-    // Bottom nav admin
+    el("stat-exercises-card").style.display = "flex";
+    el("stat-plans-card").style.display = "flex";
+    el("stat-favorites-card").style.display = "flex";
+    el("dashboard-pro-actions").style.display = "grid";
+    // Bottom nav admin (já inclui Planos)
     el("bottom-nav-admin")?.classList.add("visible");
     el("bottom-nav-pro")?.classList.remove("visible");
     checkPendingBadge();
+    loadFavorites();
   } else {
     // Profissional — sem badge de perfil
     roleEl.classList.add("hidden");
@@ -315,10 +317,12 @@ window.navigateTo = (page) => {
   // Admin bottom nav
   el(`bnav-admin-dashboard`)?.classList.remove("active");
   el(`bnav-admin-manage`)?.classList.remove("active");
+  el(`bnav-admin-plans`)?.classList.remove("active");
   el(`bnav-admin-users`)?.classList.remove("active");
   el(`bnav-admin-suggestions`)?.classList.remove("active");
   if (page === "dashboard") el("bnav-admin-dashboard")?.classList.add("active");
   else if (page === "manage-exercises") el("bnav-admin-manage")?.classList.add("active");
+  else if (page === "plans") el("bnav-admin-plans")?.classList.add("active");
   else if (page === "users") el("bnav-admin-users")?.classList.add("active");
   else if (page === "suggestions") el("bnav-admin-suggestions")?.classList.add("active");
   if (page === "dashboard") loadDashboard();
@@ -341,11 +345,11 @@ async function loadDashboard() {
       const sugSnap = await getDocs(query(collection(db, "suggestions"), where("status", "==", "pending")));
       el("stat-suggestions").textContent = sugSnap.size;
       el("stat-suggestions-card").style.display = "flex";
-    } else {
-      const planSnap = await getDocs(query(collection(db, "plans"), where("createdBy", "==", currentUser.uid)));
-      el("stat-plans").textContent = planSnap.size;
-      el("stat-favorites").textContent = favorites.size;
     }
+    // Planos e favoritos — visíveis tanto pra admin quanto profissional
+    const planSnap = await getDocs(query(collection(db, "plans"), where("createdBy", "==", currentUser.uid)));
+    el("stat-plans").textContent = planSnap.size;
+    el("stat-favorites").textContent = favorites.size;
   } catch (e) { console.error(e); }
 }
 
