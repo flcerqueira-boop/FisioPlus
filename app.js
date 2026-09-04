@@ -183,15 +183,16 @@ window.closePromoModal = () => {
 window.enterApp = () => {
   hide("hub-screen");
   show("app");
+  applyRoleUI();
   navigateTo("dashboard");
-  loadFavorites();
 };
 
 function showApp() {
   hide("auth-screen"); hide("pending-screen"); hide("patient-view");
   showHub();
-  return;
-  show("app");
+}
+
+function applyRoleUI() {
   const roleEl = el("header-role-badge");
   if (currentUserData.role === "admin") {
     // Badge Admin visível só para admin
@@ -231,7 +232,6 @@ function showApp() {
     el("bottom-nav-admin")?.classList.remove("visible");
     loadFavorites();
   }
-  navigateTo("dashboard");
 }
 
 // ─── AUTH TABS ────────────────────────────────────────────────────────────
