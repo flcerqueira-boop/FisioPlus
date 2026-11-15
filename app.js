@@ -181,20 +181,40 @@ async function checkPromo() {
     if (!promo.active) return;
     const version = promo.version || 1;
     const seenKey = `promo_seen_v${version}`;
-    if (localStorage.getItem(seenKey)) return;
+    if (promo.always) {
+      // Modo "sempre": aparece a cada acesso (uma vez por carregamento da página)
+      if (window.__promoShownThisLoad) return;
+      window.__promoShownThisLoad = true;
+    } else if (localStorage.getItem(seenKey)) return;
     el("promo-title").textContent = promo.title || "";
     el("promo-message").textContent = promo.message || "";
     el("promo-cta").textContent = promo.cta || "";
+    if (promo.cta) show("promo-cta-box"); else hide("promo-cta-box");
+    const linkBtn = el("promo-link-btn");
+    const url = (promo.btnUrl || "").trim();
+    if (/^https?:\/\//i.test(url)) {
+      linkBtn.href = url;
+      linkBtn.textContent = promo.btnText || "Saiba mais";
+      linkBtn.classList.remove("hidden");
+    } else {
+      linkBtn.classList.add("hidden");
+    }
     show("promo-modal");
+    window.__promoAlways = !!promo.always;
     window.__promoSeenKey = seenKey;
   } catch (e) {
     // Silencioso — não deve atrapalhar o carregamento do hub
   }
 }
 
+window.promoLinkClicked = () => {
+  try { trackCardClick("PROMO"); } catch (e) {}
+  setTimeout(closePromoModal, 300);
+};
+
 window.closePromoModal = () => {
   hide("promo-modal");
-  if (window.__promoSeenKey) {
+  if (window.__promoSeenKey && !window.__promoAlways) {
     localStorage.setItem(window.__promoSeenKey, "1");
   }
 };

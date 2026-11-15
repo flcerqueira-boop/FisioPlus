@@ -89,7 +89,19 @@
             </div>
             <div>
               <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">Chamada de ação (CTA)</label>
-              <input id="promo-cta-input" placeholder="Ex: 📸 Print esta tela e envie para @felipe_cerqueira no Instagram" />
+              <input id="promo-cta-input" placeholder="Opcional. Ex: 📸 Print esta tela e envie para @felipe_cerqueira no Instagram" />
+            </div>
+            <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
+              <input type="checkbox" id="promo-always" style="width:16px;height:16px;" />
+              Mostrar em todos os acessos (até desativar)
+            </label>
+            <div>
+              <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">Texto do botão (opcional)</label>
+              <input id="promo-btntext-input" placeholder="Ex: Quero garantir minha vaga" />
+            </div>
+            <div>
+              <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px;">Link do botão (opcional, começa com https://)</label>
+              <input id="promo-btnurl-input" placeholder="https://..." />
             </div>
           </div>
           <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;">
@@ -269,6 +281,9 @@
             document.getElementById('promo-title-input').value = d.title || "";
             document.getElementById('promo-message-input').value = d.message || "";
             document.getElementById('promo-cta-input').value = d.cta || "";
+            document.getElementById('promo-always').checked = !!d.always;
+            document.getElementById('promo-btntext-input').value = d.btnText || "";
+            document.getElementById('promo-btnurl-input').value = d.btnUrl || "";
           }
         } catch (e) {
           document.getElementById('promo-status').textContent = `Erro ao carregar: ${e.message}`;
@@ -282,6 +297,9 @@
           title: document.getElementById('promo-title-input').value.trim(),
           message: document.getElementById('promo-message-input').value.trim(),
           cta: document.getElementById('promo-cta-input').value.trim(),
+          always: document.getElementById('promo-always').checked,
+          btnText: document.getElementById('promo-btntext-input').value.trim(),
+          btnUrl: document.getElementById('promo-btnurl-input').value.trim(),
           updatedAt: serverTimestamp(),
         };
         if (novaCampanha) {
